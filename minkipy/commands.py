@@ -68,3 +68,6 @@ class PythonCommand(Command):
             script = utils.load_script(file)
             run = getattr(script, self._function)
             return run(*self._args)
+
+
+HISTORIAN_TYPES = Command, PythonCommand

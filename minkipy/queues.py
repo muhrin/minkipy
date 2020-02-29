@@ -34,14 +34,12 @@ class Queue:
 
                 try:
                     yield task
-                except Exception as exc:
-                    task.error = str(exc)
-                    task.state = tasks.FAILED
-                    raise
-                else:
                     # Task done
                     if task.state == tasks.RUNNING:
                         task.state = tasks.DONE
+                except Exception as exc:
+                    outcome.set_exception(exc)
+                else:
                     outcome.set_result(True)
 
     def submit(self, task: tasks.Task):

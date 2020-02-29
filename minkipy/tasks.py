@@ -43,6 +43,7 @@ class Task(mincepy.BaseSavableObject):
 
     @property
     def state(self):
+        self.sync()
         return self._state
 
     @state.setter
@@ -69,10 +70,11 @@ class Task(mincepy.BaseSavableObject):
                 os.makedirs(self.folder)
             self.copy_files_to(self.folder)
             result = self._cmd.run()
+            self._state = DONE
             return result
         except Exception as exc:
-            task.error = str(exc)
-            task.state = FAILED
+            self.error = str(exc)
+            self.state = FAILED
             raise
         finally:
             self.save()
@@ -89,3 +91,6 @@ def task(cmd, args=None, folder: [str, Path] = ''):
     args = args or []
 
     return Task(commands.command(cmd, args), folder)
+
+
+HISTORIAN_TYPES = (Task,)

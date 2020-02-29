@@ -25,6 +25,8 @@ def test_create_task(historian: mincepy.Historian):
     task = minkipy.task(my_task, [5])
     assert isinstance(task, minkipy.Task)
     assert task.run() == 5
+    assert task.state == minkipy.DONE
 
     task2 = minkipy.task("{}@my_task".format(__file__), [10])
     assert task2.run() == 10
+    assert task.state == minkipy.DONE

@@ -7,7 +7,7 @@ import mincepy
 @pytest.fixture
 def mongodb_archive():
     client = pymongo.MongoClient()
-    db = client.minki_tests
+    db = client['minki-tests']
     mongo_archive = mincepy.mongo.MongoArchive(db)
     yield mongo_archive
     client.drop_database(db)
