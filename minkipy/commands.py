@@ -1,0 +1,73 @@
+from abc import ABCMeta, abstractmethod
+import inspect
+from pathlib import Path
+import sys
+from typing import List, Optional, Sequence
+import uuid
+
+import mincepy
+from . import utils
+
+__all__ = 'Command', 'command', 'PythonCommand'
+
+
+class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
+    TYPE_ID = uuid.UUID('38dc3093-058f-4934-9a48-292eeef35e11')
+    ATTRS = ('_args',)
+
+    def __init__(self, args: Sequence, historian=None):
+        super().__init__(historian)
+        self._args = tuple(args)
+
+    @property
+    def args(self) -> tuple:
+        return self._args
+
+    @abstractmethod
+    def run(self) -> Optional[List]:
+        """Run the command with the stored arguments"""
+
+
+def command(
+        cmd,
+        args: List = (),
+        type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
+    """Create a new command"""
+    if type == 'python-function':
+        function = 'run'
+        if inspect.isfunction(cmd):
+            script_file = sys.modules[cmd.__module__].__file__
+            function = cmd.__name__
+        elif inspect.ismodule(cmd):
+            script_file = cmd.__file__
+        elif isinstance(cmd, str) and '@' in cmd:
+            script_file, function = cmd.split('@')
+            if not script_file.endswith('.py'):
+                # Assume they've given a module path
+                script_file = sys.modules[script_file].__file__
+        else:
+            raise ValueError("Unknown python function command '{}".format(cmd))
+
+        return PythonCommand(script_file, function, args)
+
+    raise ValueError("Unknown command type '{}'".format(type))
+
+
+class PythonCommand(Command):
+    TYPE_ID = uuid.UUID('61736206-729b-4a0b-9fac-6b5e71123ba0')
+    ATTRS = ('_script_file', '_function')
+
+    def __init__(self, script_file, function='run', args=(), historian=None):
+        super(PythonCommand, self).__init__(args, historian)
+
+        script_file = Path(script_file)
+        self._script_file = self._historian.create_file(script_file.name, 'utf-8')
+        self._script_file.from_disk(script_file)
+
+        self._function = function
+
+    def run(self) -> Optional[List]:
+        with self._script_file.open() as file:
+            script = utils.load_script(file)
+            run = getattr(script, self._function)
+            return run(*self._args)
