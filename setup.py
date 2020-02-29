@@ -47,4 +47,4 @@ setup(
     ],
     include_package_data=True,
     test_suite='test',
-    entry_points={'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types', ]})
+    entry_points={'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',]})

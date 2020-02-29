@@ -4,6 +4,7 @@ cache: pip
 
 services:
   - mongodb
+  - rabbitmq
 
 python:
   - 3.5
