@@ -66,8 +66,8 @@ class Task(mincepy.BaseSavableObject):
     def run(self):
         try:
             self.state = RUNNING
-            if not os.path.exists(self.folder):
-                os.makedirs(self.folder)
+            if not os.path.exists(str(self.folder)):
+                os.makedirs(str(self.folder))
             self.copy_files_to(self.folder)
             result = self._cmd.run()
             self._state = DONE
