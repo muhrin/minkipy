@@ -28,7 +28,7 @@ setup(
     keywords='workflows schedulers',
     install_requires=[
         'mincepy~=0.9.6',
-        'kiwipy[rmq]@git+https://github.com/muhrin/kiwipy.git@4c18894d61bca166ac11d55c66bee2102aff05a0#egg=kiwipy',
+        'kiwipy[rmq]@git+https://github.com/muhrin/kiwipy.git@0bf14a1a879085022329fa544f885957dd1234be#egg=kiwipy',
     ],
     extras_require={
         'dev': [
