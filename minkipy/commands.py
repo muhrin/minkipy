@@ -28,10 +28,7 @@ class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
         """Run the command with the stored arguments"""
 
 
-def command(
-        cmd,
-        args: List = (),
-        type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
+def command(cmd, args: List = (), type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
     """Create a new command"""
     if type == 'python-function':
         function = 'run'
