@@ -14,7 +14,8 @@ __all__ = ('get_communicator', 'settings_path')
 ACTIVE_PROJECT_KEY = 'active_project'
 DEFAULT_SETTINGS = {}
 
-_communicator = None  # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+_communicator = None
 
 
 def get_communicator() -> Optional[kiwipy.Communicator]:
@@ -44,7 +45,7 @@ def read_settings():
 def write_settings(settings: dict):
     path = settings_path()
     if not path.parent.exists():
-        path.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(settings_path(), 'w') as file:
         json.dump(settings, file, indent=4)
