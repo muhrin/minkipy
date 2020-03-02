@@ -7,7 +7,7 @@ def do_stuff(arg):
     return arg
 
 
-def test_queue_basic(historian: mincepy.Historian):
+def test_queue_basic(historian: mincepy.Historian, test_project):
     queue = minkipy.queue('default', historian=historian)
     task = minkipy.task(do_stuff, ['stuff'])
     queue.submit(task)

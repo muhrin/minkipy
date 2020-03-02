@@ -9,7 +9,7 @@ from . import settings
 __all__ = ('Project', 'workon', 'project', 'working_on', 'get_active_project', 'set_active_project',
            'get_projects')
 
-# pylint: disable=global-statement
+# pylint: disable=global-statement, redefined-outer-name
 
 # pylint: disable=invalid-name
 _working_on = None  # type: Optional[Project]
@@ -50,8 +50,6 @@ class Project:
         }
 
     def workon(self):
-        from . import settings
-
         historian = mincepy.historian(self.mincepy['connection_params'])
         settings.set_communicator(kiwipy.connect(self.kiwipy['connection_params']))
 
@@ -79,13 +77,13 @@ def project(project_name: str = 'default') -> Project:
     if project_name not in stored:
         proj = Project(project_name)
         stored[project_name] = proj.to_dict()
-        settings_dict.setdefault(settings_dict.ACTIVE_PROJECT_KEY, project_name)
+        settings_dict.setdefault(settings.ACTIVE_PROJECT_KEY, project_name)
         update_settings_file = True
     else:
         proj = Project.from_dict(stored[project_name])
 
     if update_settings_file:
-        settings_dict.write_settings(settings_dict)
+        settings.write_settings(settings_dict)
 
     return proj
 

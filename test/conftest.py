@@ -1,3 +1,4 @@
+import os
 import pymongo
 import pytest
 
@@ -25,7 +26,9 @@ def historian(mongodb_archive):
 
 
 @pytest.fixture
-def test_project(mongodb_archive):
+def test_project(mongodb_archive, tmp_path):
+    os.environ[minkipy.ENV_MINKIPY_SETTINGS] = str(tmp_path / 'settings.json')
+
     project = minkipy.project('minki-tests')
     project.kiwipy['connection_params'] = 'amqp://guest:guest@127.0.0.1'
     project.workon()

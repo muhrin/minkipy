@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -7,11 +8,12 @@ import kiwipy
 
 from . import default
 
-__all__ = ('get_communicator', 'settings_path')
+__all__ = ('get_communicator', 'settings_path', 'ENV_MINKIPY_SETTINGS')
 
 # pylint: disable=global-statement
 
 ACTIVE_PROJECT_KEY = 'active_project'
+ENV_MINKIPY_SETTINGS = 'MINKIPY_SETTINGS'
 DEFAULT_SETTINGS = {}
 
 # pylint: disable=invalid-name
@@ -52,5 +54,8 @@ def write_settings(settings: dict):
 
 
 def settings_path():
-    app_dir = Path(click.get_app_dir('minkipy', roaming=False))
-    return app_dir / 'settings.json'
+    try:
+        return Path(os.environ[ENV_MINKIPY_SETTINGS])
+    except KeyError:
+        app_dir = Path(click.get_app_dir('minkipy', roaming=False))
+        return app_dir / 'settings.json'
