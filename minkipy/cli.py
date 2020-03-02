@@ -2,8 +2,9 @@ import pprint
 
 import click
 
+import minkipy
+
 from . import default
-from . import settings
 from . import tasks
 from . import workers
 from . import queues
@@ -28,9 +29,9 @@ def minki():
 @click.argument('args', type=str, nargs=-1)
 def submit(project, folder, queue, cmd, args):
     """Submit a task to a queue"""
-    settings.workon(project)
-    task = tasks.task(cmd, args, folder)
-    queues.queue(queue).submit(task)
+    minkipy.workon(project)
+    task = minkipy.task(cmd, args, folder)
+    minkipy.queue(queue).submit(task)
 
 
 @minki.command()
@@ -43,8 +44,8 @@ def submit(project, folder, queue, cmd, args):
 @click.argument('queue', type=str, default=default.QUEUE)
 def run(project, max_tasks, timeout, queue):
     """Process a number of tasks"""
-    settings.workon(project)
-    task_queue = queues.queue(queue)
+    minkipy.workon(project)
+    task_queue = minkipy.queue(queue)
     workers.run(task_queue, max_tasks, timeout)
 
 
@@ -53,7 +54,7 @@ def run(project, max_tasks, timeout, queue):
 @click.argument('queue', type=str, default=default.QUEUE)
 def list(project, queue):
     """List queued tasks"""
-    settings.workon(project)
+    minkipy.workon(project)
 
     ls_queue = queues.queue(queue)
     for task in ls_queue:
@@ -68,15 +69,15 @@ def project():
 @project.command()
 @click.argument('name', type=str)
 def create(name):
-    project = settings.project(name)
+    project = minkipy.project(name)
     click.echo("Created project '{}'".format(name))
     click.echo(pretty.pformat(project.to_dict()))
 
 
 @project.command()
 def list():
-    active = settings.get_active_project()
-    for project in settings.get_projects().values():
+    active = minkipy.get_active_project()
+    for project in minkipy.get_projects().values():
         line = [project.name]
         if project.uuid == active.uuid:
             line.append('[active]')
@@ -88,7 +89,7 @@ def list():
 @click.argument('project', type=str)
 def show(project):
     """Show the project settings"""
-    projects = settings.get_projects()
+    projects = minkipy.get_projects()
     if project not in projects:
         click.echo("Project not found")
         return 1
@@ -101,7 +102,7 @@ def show(project):
 def workon(project):
     """Set the active project"""
     try:
-        settings.set_active_project(project)
+        minkipy.set_active_project(project)
     except ValueError as exc:
         click.echo(exc)
         return 1

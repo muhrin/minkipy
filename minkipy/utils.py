@@ -1,5 +1,6 @@
 import contextlib
 import importlib.util
+import inspect
 import io
 import os
 from pathlib import Path
@@ -177,6 +178,32 @@ def load_script(script_file: [str, io.TextIOBase]):
     finally:
         if temp_file is not None:
             os.remove(script_path)
+
+
+def get_symbol(module, name: str):
+    """Given a module and a string that represents a path to a symbol this will retrieve it
+    e.g. name='MyClass.do_stuff' will get the do_stuff function from the class MyClass within
+    the module 'module'"""
+    path = name.split('.')
+    obj = module
+    for entry in path:
+        obj = getattr(obj, entry)
+    return obj
+
+
+def yield_symbol_names(symbol):
+    if inspect.ismethod(symbol) or inspect.isfunction(symbol):
+        if inspect.ismethod(symbol):
+            yield from yield_symbol_names(symbol.__self__)
+        yield symbol.__name__
+    elif isinstance(symbol, object):
+        yield symbol.__class__.__name__
+    else:
+        raise TypeError("Unknown symbol type: '{}'".format(symbol))
+
+
+def get_symbol_name(symbol):
+    return ".".join(yield_symbol_names(symbol))
 
 
 HISTORIAN_TYPES = (ScriptsStore,)

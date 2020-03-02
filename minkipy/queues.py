@@ -27,7 +27,7 @@ class Queue:
 
     @contextmanager
     def next_task(self, timeout=None):
-        with self._kiwi_queue.next_task(timeout=timeout, fail=False) as ktask:
+        with self._kiwi_queue.next_task(timeout=timeout) as ktask:
             with ktask.processing() as outcome:
                 msg = ktask.body
                 task = self._historian.load(msg[TASK_ID])  # type: tasks.Task
@@ -59,8 +59,16 @@ class Queue:
         task.state = tasks.QUEUED
 
 
-def queue(name: str, communicator=None, historian=None):
-    """Get a queue of the given name"""
+def queue(name: str = None,
+          communicator: kiwipy.Communicator = None,
+          historian: mincepy.Historian = None):
+    """Get a queue of the given name.  If the queue doesn't exist it will be
+    created.  If None is passed the default queue will be used.
+
+    """
+    if name is None:
+        name = settings.get_default_queue()
+
     communicator = communicator or settings.get_communicator()
     historian = historian or mincepy.get_historian()
     return Queue(communicator, historian, name)

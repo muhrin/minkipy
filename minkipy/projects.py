@@ -1,4 +1,18 @@
+from typing import Optional
 import uuid
+
+import kiwipy
+import mincepy
+
+from . import settings
+
+__all__ = ('Project', 'workon', 'project', 'working_on', 'get_active_project', 'set_active_project',
+           'get_projects')
+
+# pylint: disable=global-statement
+
+# pylint: disable=invalid-name
+_working_on = None  # type: Optional[Project]
 
 
 class Project:
@@ -34,3 +48,104 @@ class Project:
             'kiwipy': self.kiwipy,
             'mincepy': self.mincepy,
         }
+
+    def workon(self):
+        from . import settings
+
+        historian = mincepy.historian(self.mincepy['connection_params'])
+        settings.set_communicator(kiwipy.connect(self.kiwipy['connection_params']))
+
+        mincepy.set_historian(historian)
+        _set_working_on(self)
+
+    def set_as_active(self):
+        set_active_project(self.name)
+
+
+def get_projects() -> dict:
+    settings_dict = settings.read_settings()
+    return {
+        name: Project.from_dict(value) for name, value in settings_dict.get('projects', {}).items()
+    }
+
+
+def project(project_name: str = 'default') -> Project:
+    """Create a new project"""
+    settings_dict = settings.read_settings()
+    update_settings_file = False
+
+    stored = settings_dict.setdefault('projects', {})
+
+    if project_name not in stored:
+        proj = Project(project_name)
+        stored[project_name] = proj.to_dict()
+        settings_dict.setdefault(settings_dict.ACTIVE_PROJECT_KEY, project_name)
+        update_settings_file = True
+    else:
+        proj = Project.from_dict(stored[project_name])
+
+    if update_settings_file:
+        settings_dict.write_settings(settings_dict)
+
+    return proj
+
+
+def workon(project_name: str = None, auto_create=False):
+    """
+    Set the project currently being worked on.  This will set the global historian and kiwipy
+    communicator so be careful if you were already using these.
+
+    :param project_name: the project to work on.  If None, will use the currently active project
+    :param auto_create: if True automatically create a project if it doesn't exist
+    """
+    global _working_on
+    if project_name is None:
+        settings_dict = settings.read_settings()
+        project_name = settings_dict[settings.ACTIVE_PROJECT_KEY]
+
+    proj = get_projects().get(project_name, None)
+    if proj is None:
+        if auto_create:
+            proj = project(project_name)
+        else:
+            raise ValueError("Project '{}' does not exist.".format(project_name))
+
+    if _working_on is not None and _working_on.uuid == proj.uuid:
+        return
+
+    proj.workon()
+    return proj
+
+
+def working_on() -> Project:
+    global _working_on
+    if _working_on is None:
+        workon()
+    return _working_on
+
+
+def get_active_project() -> Optional[Project]:
+    settings_dict = settings.read_settings()
+    active = settings_dict.get(settings.ACTIVE_PROJECT_KEY, None)
+    if active is None:
+        return None
+
+    return Project.from_dict(settings_dict['projects'][active])
+
+
+def set_active_project(name):
+    settings_dict = settings.read_settings()
+    if name not in settings_dict['projects']:
+        raise ValueError("Project '{}' does not exist".format(name))
+    settings_dict[settings.ACTIVE_PROJECT_KEY] = name
+    settings.write_settings(settings_dict)
+
+
+def _set_working_on(project: Project):
+    global _working_on
+    _working_on = project
+
+
+def _get_working_on() -> Project:
+    global _working_on
+    return _working_on

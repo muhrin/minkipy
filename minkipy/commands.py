@@ -28,11 +28,15 @@ class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
         """Run the command with the stored arguments"""
 
 
-def command(cmd, args: List = (), type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
+def command(cmd, args: Sequence = (), type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
     """Create a new command"""
     if type == 'python-function':
         function = 'run'
-        if inspect.isfunction(cmd):
+        if inspect.ismethod(cmd):
+            script_file = sys.modules[cmd.__module__].__file__
+            function = utils.get_symbol_name(cmd)
+            args = (cmd.__self__,) + args
+        elif inspect.isfunction(cmd):
             script_file = sys.modules[cmd.__module__].__file__
             function = cmd.__name__
         elif inspect.ismodule(cmd):
@@ -69,7 +73,8 @@ class PythonCommand(Command):
     def run(self) -> Optional[List]:
         with self._script_file.open() as file:
             script = utils.load_script(file)
-            run = getattr(script, self._function)
+            run = utils.get_symbol(script, self._function)
+            # run = getattr(script, self._function)
             return run(*self._args)
 
 
