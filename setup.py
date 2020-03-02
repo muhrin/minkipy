@@ -27,6 +27,7 @@ setup(
     ],
     keywords='workflows schedulers',
     install_requires=[
+        'click',
         'mincepy~=0.9.7',
         'kiwipy[rmq]@git+https://github.com/muhrin/kiwipy.git@0bf14a1a879085022329fa544f885957dd1234be#egg=kiwipy',
     ],
@@ -47,4 +48,7 @@ setup(
     ],
     include_package_data=True,
     test_suite='test',
-    entry_points={'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',]})
+    entry_points={
+        'console_scripts': ['minki = minkipy.cli:minki'],
+        'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',]
+    })

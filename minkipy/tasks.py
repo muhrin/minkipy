@@ -52,6 +52,10 @@ class Task(mincepy.BaseSavableObject):
         self.save()
 
     @property
+    def cmd(self):
+        return self._cmd
+
+    @property
     def files(self) -> Sequence[mincepy.builtins.BaseFile]:
         return self._files
 
@@ -85,10 +89,9 @@ class Task(mincepy.BaseSavableObject):
             file.to_disk(folder)
 
 
-def task(cmd, args=None, folder: [str, Path] = ''):
+def task(cmd, args=(), folder: [str, Path] = ''):
     """Create a task"""
     folder = Path(folder).absolute()
-    args = args or []
 
     return Task(commands.command(cmd, args), folder)
 

@@ -63,6 +63,9 @@ class PythonCommand(Command):
 
         self._function = function
 
+    def __str__(self):
+        return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
+
     def run(self) -> Optional[List]:
         with self._script_file.open() as file:
             script = utils.load_script(file)

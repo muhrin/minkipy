@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 
-import mincepy
 import kiwipy.rmq
+import mincepy
 
+from . import settings
 from . import tasks
 
 __all__ = 'Queue', 'queue'
@@ -26,7 +27,7 @@ class Queue:
 
     @contextmanager
     def next_task(self, timeout=None):
-        with self._kiwi_queue.next_task(timeout=timeout) as ktask:
+        with self._kiwi_queue.next_task(timeout=timeout, fail=False) as ktask:
             with ktask.processing() as outcome:
                 msg = ktask.body
                 task = self._historian.load(msg[TASK_ID])  # type: tasks.Task
@@ -42,8 +43,14 @@ class Queue:
                 else:
                     outcome.set_result(True)
 
-    def submit(self, task: tasks.Task):
-        """Submit a task to the queue"""
+    def submit(self, task, *tasks):
+        """Submit one or more tasks to the queue"""
+        self.submit_one(task)
+        for additional in tasks:
+            self.submit_one(additional)
+
+    def submit_one(self, task: tasks.Task):
+        """Submit one task to the queue"""
         # Encode the task
         task.save()
         task_id = task.obj_id
@@ -54,6 +61,6 @@ class Queue:
 
 def queue(name: str, communicator=None, historian=None):
     """Get a queue of the given name"""
-    communicator = communicator or kiwipy.get_communicator()
+    communicator = communicator or settings.get_communicator()
     historian = historian or mincepy.get_historian()
     return Queue(communicator, historian, name)
