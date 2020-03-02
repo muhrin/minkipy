@@ -40,7 +40,7 @@ def read_settings():
         write_settings(DEFAULT_SETTINGS)
         return DEFAULT_SETTINGS
 
-    with open(path, 'r') as file:
+    with open(str(path), 'r') as file:
         return json.load(file)
 
 
@@ -49,7 +49,7 @@ def write_settings(settings: dict):
     if not path.parent.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(settings_path(), 'w') as file:
+    with open(str(settings_path()), 'w') as file:
         json.dump(settings, file, indent=4)
 
 
