@@ -83,9 +83,6 @@ class ScriptsStore(mincepy.BaseSavableObject):
         with self.open(name) as file:
             print(file.read())
 
-    def save(self):
-        self._historian.save(self)
-
 
 class ScriptsNamespace:
 

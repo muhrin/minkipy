@@ -20,10 +20,15 @@ class Queue:
         self._communicator = communicator
         self._historian = historian
         self._kiwi_queue = communicator.task_queue(queue_name)
+        self._name = queue_name
 
     def __iter__(self):
         for msg in self._kiwi_queue:
             yield self._historian.load(msg.body[TASK_ID])
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @contextmanager
     def next_task(self, timeout=None):
@@ -38,16 +43,17 @@ class Queue:
                     # Task done
                     if task.state == tasks.RUNNING:
                         task.state = tasks.DONE
-                except Exception as exc:
+                except Exception as exc:  # pylint: disable=broad-except
                     outcome.set_exception(exc)
                 else:
                     outcome.set_result(True)
+                finally:
+                    task.queue = ''
 
-    def submit(self, task, *tasks):
+    def submit(self, *tasks):  # pylint: disable=redefined-outer-name
         """Submit one or more tasks to the queue"""
-        self.submit_one(task)
-        for additional in tasks:
-            self.submit_one(additional)
+        for task in tasks:
+            self.submit_one(task)
 
     def submit_one(self, task: tasks.Task):
         """Submit one task to the queue"""
@@ -56,6 +62,7 @@ class Queue:
         task_id = task.obj_id
         msg = {TASK_ID: task_id}
         self._kiwi_queue.task_send(msg, no_reply=True)
+        task.queue = self.name
         task.state = tasks.QUEUED
 
 

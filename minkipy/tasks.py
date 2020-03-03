@@ -40,6 +40,7 @@ class Task(mincepy.BaseSavableObject):
                 self.add_files(file)
         self._state = ''
         self.error = ''
+        self.queue = ''  # Set the the name of the queue it's in if it gets put in one
 
     @property
     def state(self):
@@ -91,8 +92,7 @@ class Task(mincepy.BaseSavableObject):
 
 def task(cmd, args=(), folder: [str, Path] = ''):
     """Create a task"""
-    folder = Path(folder).absolute()
-
+    folder = Path(folder)
     return Task(commands.command(cmd, args), folder)
 
 
