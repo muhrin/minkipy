@@ -27,6 +27,9 @@ class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
     def run(self) -> Optional[List]:
         """Run the command with the stored arguments"""
 
+    def copy_files_to(self, path):
+        """Copy any command files to the given path"""
+
 
 def command(cmd, args: Sequence = (), type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
     """Create a new command"""
@@ -74,8 +77,10 @@ class PythonCommand(Command):
         with self._script_file.open() as file:
             script = utils.load_script(file)
             run = utils.get_symbol(script, self._function)
-            # run = getattr(script, self._function)
             return run(*self._args)
+
+    def copy_files_to(self, path):
+        self._script_file.to_disk(path)
 
 
 HISTORIAN_TYPES = Command, PythonCommand

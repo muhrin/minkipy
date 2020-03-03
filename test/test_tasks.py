@@ -1,5 +1,6 @@
 import io
 import os
+from pathlib import Path
 
 import minkipy
 
@@ -15,7 +16,8 @@ def add(a, b):
     assert module.add(5, 6) == 11
 
 
-def writing_task(path, msg):
+def writing_task(path, msg: str):
+    """A simple task that writes a message to a file"""
     with open(str(path), 'w') as file:
         file.write(msg)
 
@@ -37,9 +39,17 @@ def test_create_task(test_project):
 
 
 def test_task_working_folder(tmp_path, test_project):
+    """Check that a script runs in the folder given"""
     msg = 'Do you have a license for this minki?'
     task = minkipy.task(writing_task, ['hello.txt', msg], folder=tmp_path)
     task.run()
     assert os.path.exists(tmp_path / 'hello.txt')
     with open(str(tmp_path / 'hello.txt'), 'r') as file:
         assert file.read() == msg
+
+
+def test_script_written(tmp_path, test_project):
+    """Test that a task writes it's script to the folder"""
+    task = minkipy.task(my_task, [10], folder=tmp_path)
+    task.run()
+    assert os.path.isfile(tmp_path / Path(__file__).name)

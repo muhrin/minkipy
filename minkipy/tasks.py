@@ -91,6 +91,9 @@ class Task(mincepy.BaseSavableObject):
 
     def copy_files_to(self, folder):
         """Copy the task files to the given folder.  The folder must exist already."""
+        # For ease of debugging write any command file (e.g. the script file) as well
+        # do this first just in case any of the files have a file with the same name
+        self.cmd.copy_files_to(folder)
         for file in self._files:
             file.to_disk(folder)
 
