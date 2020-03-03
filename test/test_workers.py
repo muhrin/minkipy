@@ -1,5 +1,3 @@
-import mincepy
-
 import minkipy
 
 
@@ -7,8 +5,8 @@ def add(a, b):
     return a + b
 
 
-def test_create_task(historian: mincepy.Historian, test_project):
-    test_queue = minkipy.queue('test-queue', historian=historian)
+def test_create_task(test_project):
+    test_queue = minkipy.queue('test-queue')
     t1 = minkipy.task(add, (4, 5))
     t2 = minkipy.task(add, (24, 56))
     test_queue.submit(t1, t2)
