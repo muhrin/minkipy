@@ -6,6 +6,7 @@ from typing import List, Sequence
 import mincepy
 
 from . import commands
+from . import utils
 
 __all__ = ('QUEUED', 'HELD', 'RUNNING', 'DONE', 'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY', 'Task',
            'task')
@@ -74,7 +75,11 @@ class Task(mincepy.BaseSavableObject):
             if not os.path.exists(str(self.folder)):
                 os.makedirs(str(self.folder))
             self.copy_files_to(self.folder)
-            result = self._cmd.run()
+
+            # Change the directory to the running folder and back at the end
+            with utils.working_directory(self.folder):
+                result = self._cmd.run()
+
             self._state = DONE
             return result
         except Exception as exc:

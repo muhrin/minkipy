@@ -203,4 +203,15 @@ def get_symbol_name(symbol):
     return ".".join(yield_symbol_names(symbol))
 
 
+@contextlib.contextmanager
+def working_directory(path):
+    """Changes working directory and returns to previous on exit."""
+    prev_cwd = Path.cwd()
+    os.chdir(str(path))  # str call for python < 3.6
+    try:
+        yield
+    finally:
+        os.chdir(str(prev_cwd))
+
+
 HISTORIAN_TYPES = (ScriptsStore,)
