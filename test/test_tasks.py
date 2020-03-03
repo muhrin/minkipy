@@ -40,16 +40,22 @@ def test_create_task(test_project):
 
 def test_task_working_folder(tmp_path, test_project):
     """Check that a script runs in the folder given"""
+    folder = 'task_folder'
     msg = 'Do you have a license for this minki?'
-    task = minkipy.task(writing_task, ['hello.txt', msg], folder=tmp_path)
-    task.run()
-    assert os.path.exists(tmp_path / 'hello.txt')
-    with open(str(tmp_path / 'hello.txt'), 'r') as file:
+    task = minkipy.task(writing_task, ['hello.txt', msg], folder=folder)
+
+    with minkipy.utils.working_directory(tmp_path):
+        task.run()
+    assert os.path.exists(str(tmp_path / folder / 'hello.txt'))
+    with open(str(tmp_path / folder / 'hello.txt'), 'r') as file:
         assert file.read() == msg
 
 
 def test_script_written(tmp_path, test_project):
     """Test that a task writes it's script to the folder"""
-    task = minkipy.task(my_task, [10], folder=tmp_path)
-    task.run()
-    assert os.path.isfile(tmp_path / Path(__file__).name)
+    folder = 'task_folder'
+    task = minkipy.task(my_task, [10], folder=folder)
+
+    with minkipy.utils.working_directory(tmp_path):
+        task.run()
+    assert os.path.isfile(str(tmp_path / folder / Path(__file__).name))

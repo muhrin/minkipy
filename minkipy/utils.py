@@ -207,7 +207,8 @@ def get_symbol_name(symbol):
 def working_directory(path):
     """Changes working directory and returns to previous on exit."""
     prev_cwd = Path.cwd()
-    os.chdir(str(path))  # str call for python < 3.6
+    if path:
+        os.chdir(str(path))  # str call for python < 3.6
     try:
         yield
     finally:

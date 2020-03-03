@@ -1,5 +1,3 @@
-import mincepy
-
 import minkipy
 
 
@@ -7,8 +5,8 @@ def do_stuff(arg):
     return arg
 
 
-def test_queue_basic(historian: mincepy.Historian, test_project):
-    queue = minkipy.queue('default', historian=historian)
+def test_queue_basic(test_project):
+    queue = minkipy.queue('default')
     task = minkipy.task(do_stuff, ['stuff'])
     queue.submit(task)
 
@@ -17,4 +15,4 @@ def test_queue_basic(historian: mincepy.Historian, test_project):
 
     # Now check our original 'task' is finished
     task.sync()
-    assert task.state == 'done'
+    assert task.state == 'done', task.error

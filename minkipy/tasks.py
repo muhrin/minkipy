@@ -1,5 +1,6 @@
-import uuid
+import logging
 import os
+import uuid
 from pathlib import Path
 from typing import List, Sequence
 
@@ -29,12 +30,14 @@ class Task(mincepy.BaseSavableObject):
 
     def __init__(self,
                  cmd: commands.Command,
-                 folder: Path,
+                 folder: str,
                  files: List[Path] = None,
                  historian=None):
+        assert isinstance(folder,
+                          str), "Folder name must be a string, got '{}'".format(type(folder))
         super().__init__(historian)
         self._cmd = cmd
-        self.folder = folder  # The name folder where the task will be ran
+        self.folder = folder  # The name of the folder where the task will be ran
         self._files = mincepy.builtins.RefList()
         if files:
             for file in files:
@@ -42,6 +45,7 @@ class Task(mincepy.BaseSavableObject):
         self._state = ''
         self.error = ''
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one
+        self.log_level = logging.WARNING
 
     @property
     def state(self):
@@ -72,8 +76,8 @@ class Task(mincepy.BaseSavableObject):
     def run(self):
         try:
             self.state = RUNNING
-            if not os.path.exists(str(self.folder)):
-                os.makedirs(str(self.folder))
+            if self.folder and not os.path.exists(self.folder):
+                os.makedirs(self.folder)
             self.copy_files_to(self.folder)
 
             # Change the directory to the running folder and back at the end
@@ -98,9 +102,8 @@ class Task(mincepy.BaseSavableObject):
             file.to_disk(folder)
 
 
-def task(cmd, args=(), folder: [str, Path] = ''):
+def task(cmd, args=(), folder: str = ''):
     """Create a task"""
-    folder = Path(folder)
     return Task(commands.command(cmd, args), folder)
 
 
