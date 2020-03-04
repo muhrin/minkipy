@@ -1,5 +1,6 @@
-import uuid
+import logging
 import os
+import uuid
 from pathlib import Path
 from typing import List, Sequence
 
@@ -44,6 +45,7 @@ class Task(mincepy.BaseSavableObject):
         self._state = ''
         self.error = ''
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one
+        self.log_level = logging.WARNING
 
     @property
     def state(self):
