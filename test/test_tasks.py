@@ -27,16 +27,17 @@ def my_task(arg):
     return arg
 
 
-def test_create_task(test_project):
+def test_create_task(tmp_path, test_project):
     # Create a task from a function in a script
-    task = minkipy.task(my_task, [5])
-    assert isinstance(task, minkipy.Task)
-    assert task.run() == 5
-    assert task.state == minkipy.DONE
+    with minkipy.utils.working_directory(tmp_path):
+        task = minkipy.task(my_task, [5])
+        assert isinstance(task, minkipy.Task)
+        assert task.run() == 5
+        assert task.state == minkipy.DONE
 
-    task2 = minkipy.task("{}@my_task".format(__file__), [10])
-    assert task2.run() == 10
-    assert task.state == minkipy.DONE
+        task2 = minkipy.task("{}@my_task".format(__file__), [10])
+        assert task2.run() == 10
+        assert task.state == minkipy.DONE
 
 
 def test_task_working_folder(tmp_path, test_project):
