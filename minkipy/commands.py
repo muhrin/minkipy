@@ -20,7 +20,7 @@ class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
         self._args = mincepy.RefList(args)
 
     @property
-    def args(self) -> tuple:
+    def args(self) -> Sequence:
         return self._args
 
     @abstractmethod

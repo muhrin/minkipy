@@ -5,8 +5,8 @@ import mincepy
 import minkipy
 
 
-def print_wf(obj):
-    print(obj)
+def simple_wf(obj):
+    return obj
 
 
 class Workflow(mincepy.BaseSavableObject):
@@ -24,7 +24,7 @@ def test_command_from_method(test_project):
 
 def test_saving_command_args(test_project):
     car = mincepy.testing.Car()
-    command = minkipy.command(print_wf, args=(car,))
+    command = minkipy.command(simple_wf, args=(car,))
 
     command_id = command.save()
     car_id = car.obj_id
@@ -36,3 +36,14 @@ def test_saving_command_args(test_project):
 
     command = mincepy.load(command_id)
     assert command.args[0].obj_id == car_id
+
+
+def test_command_none_in_args(test_project):
+    """This test checks for a bug where None could not be present in the args
+    even though this should be perfectly possible"""
+    command = minkipy.command(simple_wf, args=(None,))
+    cid = command.save()
+    del command
+
+    loaded = mincepy.load(cid)  # type: minkipy.Command
+    loaded.run()
