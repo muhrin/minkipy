@@ -15,6 +15,6 @@ def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.):
     while True:
         with queue.next_task(timeout=timeout) as fetched:
             fetched.run()
-            num_processed += 1
+        num_processed += 1
         if num_processed >= max_tasks:
             break
