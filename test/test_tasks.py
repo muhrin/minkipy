@@ -2,8 +2,10 @@ import io
 import logging
 import os
 from pathlib import Path
+import sys
 
 import minkipy
+import mincepy
 
 
 def test_load_script():
@@ -79,3 +81,27 @@ def test_task_logging(tmp_path, test_project):
     with minkipy.utils.working_directory(tmp_path):
         task.run()
     assert "I've got some bad news" not in task.log_file.read_text()
+
+
+def show_msg(msg, err=False):
+    print(msg, file=sys.stdout if not err else sys.stderr)
+
+
+def test_task_stds(tmp_path, test_project):
+    """Test that tasks can capture standard out and err"""
+    with minkipy.utils.working_directory(tmp_path):
+        task = minkipy.task(show_msg, args=('Hello stdout!',), folder='test_task')
+        task.run()
+        assert 'Hello stdout!' in task.stdout.read_text()
+        task_id = task.save()
+
+        task2 = minkipy.task(show_msg, args=('Hello stderr!', True), folder='test_task')
+        task2.run()
+        assert 'Hello stderr!' in task2.stderr.read_text()
+        task2_id = task2.save()
+
+        # Make sure they are really stored when saving
+        del task, task2
+        loaded, loaded2 = mincepy.load(task_id, task2_id)
+        assert 'Hello stdout!' in loaded.stdout.read_text()
+        assert 'Hello stderr!' in loaded2.stderr.read_text()

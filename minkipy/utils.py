@@ -9,6 +9,7 @@ import shutil
 import time
 import tempfile
 import typing
+from typing import Optional, Sequence
 import uuid
 
 import mincepy
@@ -213,6 +214,65 @@ def working_directory(path):
         yield
     finally:
         os.chdir(str(prev_cwd))
+
+
+class TextMultiplexer(io.TextIOBase):
+
+    def __init__(self, primary, *secondary):
+        super().__init__()
+        self._primary = primary  # type: io.TextIOBase
+        self._secondary = secondary  # type: Sequence[io.TextIOBase]
+
+    # Deliberately don't implement close!
+
+    @property
+    def closed(self):
+        return self._primary.closed
+
+    @property
+    def encoding(self):
+        return self._primary.encoding
+
+    @property
+    def errors(self):
+        return self._primary.errors
+
+    def fileno(self) -> int:
+        return self._primary.fileno()
+
+    def flush(self) -> None:
+        return self._primary.flush()
+
+    def isatty(self) -> bool:
+        return self._primary.isatty()
+
+    @property
+    def mode(self):
+        return self._primary.mode
+
+    @property
+    def name(self):
+        return self._primary.name
+
+    def writable(self) -> bool:
+        return self._primary.writable()
+
+    @property
+    def newlines(self):
+        return self._primary.newlines
+
+    def next(self):
+        return self._primary.next()
+
+    def read(self, size: Optional[int] = ...) -> str:
+        return self._primary.read(size)
+
+    def write(self, s: str):
+        self._primary.write(s)
+        for stream in self._secondary:
+            stream.write(s)
+
+    # TODO: Finish the methods/properties here
 
 
 HISTORIAN_TYPES = (ScriptsStore,)

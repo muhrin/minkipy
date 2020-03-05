@@ -1,8 +1,9 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stdout, redirect_stderr
 import logging
 import os
 import uuid
 from pathlib import Path
+import sys
 from typing import List, Sequence
 
 import mincepy
@@ -27,7 +28,8 @@ MEMORY = 'MEMORY'
 
 class Task(mincepy.BaseSavableObject):
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
-    ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file')
+    ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
+             '_stdout', '_stderr')
 
     def __init__(self,
                  cmd: commands.Command,
@@ -48,6 +50,8 @@ class Task(mincepy.BaseSavableObject):
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one
         self.log_level = logging.WARNING
         self._log_file = self._historian.create_file('task_log', encoding='utf-8')
+        self._stdout = self._historian.create_file('stdout', encoding='utf-8')
+        self._stderr = self._historian.create_file('stderr', encoding='utf-8')
 
     @property
     def state(self):
@@ -69,7 +73,18 @@ class Task(mincepy.BaseSavableObject):
 
     @property
     def log_file(self) -> mincepy.builtins.BaseFile:
+        """Get the log file"""
         return self._log_file
+
+    @property
+    def stdout(self) -> mincepy.builtins.BaseFile:
+        """Get the standard out file"""
+        return self._stdout
+
+    @property
+    def stderr(self) -> mincepy.builtins.BaseFile:
+        """Get the standard err file"""
+        return self._stderr
 
     # @mincepy.track
     def add_files(self, filename: [str, Path]):
@@ -80,7 +95,7 @@ class Task(mincepy.BaseSavableObject):
 
     # @mincepy.track
     def run(self):
-        with self._log():
+        with self._capture_log(), self._capture_stds():
             try:
                 self.state = RUNNING
                 if self.folder and not os.path.exists(self.folder):
@@ -109,7 +124,7 @@ class Task(mincepy.BaseSavableObject):
             file.to_disk(folder)
 
     @contextmanager
-    def _log(self):
+    def _capture_log(self):
         """Context handler to enable loggin' on the task"""
         if self.log_level is None:
             # Don't save the log
@@ -127,6 +142,15 @@ class Task(mincepy.BaseSavableObject):
                 yield
             finally:
                 logger.removeHandler(handler)
+
+    @contextmanager
+    def _capture_stds(self):
+        """Capture standard out and err"""
+        with self._stdout.open('a') as stdout, self._stderr.open('a') as stderr:
+            out = utils.TextMultiplexer(sys.stdout, stdout)
+            err = utils.TextMultiplexer(sys.stderr, stderr)
+            with redirect_stdout(out), redirect_stderr(err):
+                yield
 
 
 def task(cmd, args=(), folder: str = ''):
