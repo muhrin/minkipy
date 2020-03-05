@@ -27,7 +27,7 @@ MEMORY = 'MEMORY'
 
 class Task(mincepy.BaseSavableObject):
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
-    ATTRS = ('_cmd', 'folder', '_files', '_state', 'error')
+    ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file')
 
     def __init__(self,
                  cmd: commands.Command,
