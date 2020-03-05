@@ -17,7 +17,7 @@ class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
 
     def __init__(self, args: Sequence, historian=None):
         super().__init__(historian)
-        self._args = tuple(args)
+        self._args = mincepy.RefList(args)
 
     @property
     def args(self) -> tuple:

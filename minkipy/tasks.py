@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import logging
 import os
 import uuid
@@ -46,6 +47,7 @@ class Task(mincepy.BaseSavableObject):
         self.error = ''
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one
         self.log_level = logging.WARNING
+        self._log_file = self._historian.create_file('task_log', encoding='utf-8')
 
     @property
     def state(self):
@@ -65,6 +67,10 @@ class Task(mincepy.BaseSavableObject):
     def files(self) -> Sequence[mincepy.builtins.BaseFile]:
         return self._files
 
+    @property
+    def log_file(self) -> mincepy.builtins.BaseFile:
+        return self._log_file
+
     # @mincepy.track
     def add_files(self, filename: [str, Path]):
         filename = Path(filename)
@@ -74,24 +80,25 @@ class Task(mincepy.BaseSavableObject):
 
     # @mincepy.track
     def run(self):
-        try:
-            self.state = RUNNING
-            if self.folder and not os.path.exists(self.folder):
-                os.makedirs(self.folder)
-            self.copy_files_to(self.folder)
+        with self._log():
+            try:
+                self.state = RUNNING
+                if self.folder and not os.path.exists(self.folder):
+                    os.makedirs(self.folder)
+                self.copy_files_to(self.folder)
 
-            # Change the directory to the running folder and back at the end
-            with utils.working_directory(self.folder):
-                result = self._cmd.run()
+                # Change the directory to the running folder and back at the end
+                with utils.working_directory(self.folder):
+                    result = self._cmd.run()
 
-            self._state = DONE
-            return result
-        except Exception as exc:
-            self.error = str(exc)
-            self.state = FAILED
-            raise
-        finally:
-            self.save()
+                self._state = DONE
+                return result
+            except Exception as exc:
+                self.error = str(exc)
+                self.state = FAILED
+                raise
+            finally:
+                self.save()
 
     def copy_files_to(self, folder):
         """Copy the task files to the given folder.  The folder must exist already."""
@@ -100,6 +107,26 @@ class Task(mincepy.BaseSavableObject):
         self.cmd.copy_files_to(folder)
         for file in self._files:
             file.to_disk(folder)
+
+    @contextmanager
+    def _log(self):
+        """Context handler to enable loggin' on the task"""
+        if self.log_level is None:
+            # Don't save the log
+            yield
+            return
+
+        logger = logging.getLogger()  # Get the top level logger
+        with self.log_file.open('a') as file:
+            handler = logging.StreamHandler(file)
+            handler.setLevel(self.log_level)
+            handler.setFormatter(
+                logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+            try:
+                logger.addHandler(handler)
+                yield
+            finally:
+                logger.removeHandler(handler)
 
 
 def task(cmd, args=(), folder: str = ''):
