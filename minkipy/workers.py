@@ -1,3 +1,5 @@
+import kiwipy
+
 from . import queues
 
 __all__ = ('run',)
@@ -12,9 +14,12 @@ def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.):
     :param timeout: the maximum time (in seconds) to wait for a new task
     """
     num_processed = 0
-    while True:
-        with queue.next_task(timeout=timeout) as fetched:
-            fetched.run()
-        num_processed += 1
-        if num_processed >= max_tasks:
-            break
+    try:
+        while True:
+            with queue.next_task(timeout=timeout) as fetched:
+                fetched.run()
+            num_processed += 1
+            if num_processed >= max_tasks:
+                break
+    except kiwipy.QueueEmpty:
+        return num_processed

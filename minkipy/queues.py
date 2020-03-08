@@ -30,6 +30,9 @@ class Queue:
     def name(self) -> str:
         return self._name
 
+    def empty(self) -> bool:
+        return self._kiwi_queue.next_task(timeout=0, false=False) is None
+
     @contextmanager
     def next_task(self, timeout=None):
         with self._kiwi_queue.next_task(timeout=timeout) as ktask:
@@ -64,6 +67,21 @@ class Queue:
         self._kiwi_queue.task_send(msg, no_reply=True)
         task.queue = self.name
         task.state = tasks.QUEUED
+
+    def purge(self) -> int:
+        """Cancel all tasks in this queue"""
+        num_cancelled = 0
+        for ktask in self._kiwi_queue:
+            with ktask.processing() as outcome:
+                task = self._historian.load(ktask.body[TASK_ID])  # type: tasks.Task
+                # There is a bug in kiwipy that prevents us from cancelling this future so
+                # for now just set a cancelled results.  In any case the result is not sent
+                # back for the time being.
+                outcome.set_result('Cancelled')
+            task.state = tasks.CANCELED
+            num_cancelled += 1
+
+        return num_cancelled
 
 
 def queue(name: str = None,
