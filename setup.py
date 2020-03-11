@@ -29,7 +29,7 @@ setup(
     install_requires=[
         'click',
         'mincepy[gui]~=0.10',
-        'kiwipy[rmq]@git+https://github.com/muhrin/kiwipy.git@4c5e364a2f4855f674f9bfe149003f06db6d5fc0#egg=kiwipy',
+        'kiwipy[rmq]@git+https://github.com/muhrin/kiwipy.git@9b97a47406bc86e0684ef2bea487204f80e82942#egg=kiwipy',
     ],
     extras_require={
         'dev': [
