@@ -102,13 +102,15 @@ def list():  # pylint: disable=function-redefined
 
 
 @project.command()
-@click.argument('project', type=str, default=None)
+@click.argument('project', type=str, default=None, required=False)
 def show(project):
     """Show the project settings"""
     if project is None:
         proj = minkipy.get_active_project()
     else:
         proj = minkipy.get_projects().get(project, None)
+
+    click.echo("{}:".format(proj.name))
 
     if proj is None:
         click.echo("Project not found")

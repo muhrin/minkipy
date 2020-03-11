@@ -1,6 +1,4 @@
-import uuid
-
-import mincepy
+from mincepy.testing import *
 
 import minkipy
 
@@ -23,7 +21,7 @@ def test_command_from_method(test_project):
 
 
 def test_saving_command_args(test_project):
-    car = mincepy.testing.Car()
+    car = Car()
     command = minkipy.command(simple_wf, args=(car,))
 
     command_id = command.save()
