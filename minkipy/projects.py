@@ -68,7 +68,7 @@ def get_projects() -> dict:
 
 
 def project(project_name: str = 'default') -> Project:
-    """Create a new project"""
+    """Fetch a project with a given name or create a new one"""
     settings_dict = settings.read_settings()
     update_settings_file = False
 
