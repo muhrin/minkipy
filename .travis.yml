@@ -25,6 +25,14 @@ before_script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-script:
-  - py.test
 
+incldue:
+  - name: "MincePy"
+  - name: "MincePy with PyOS"
+    install: pip install pyos
+
+script:
+  - pytest --cov=minkipy test
+
+
+after_success: coverage report

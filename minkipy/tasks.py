@@ -8,6 +8,11 @@ from typing import List, Sequence
 
 import mincepy
 
+try:
+    import pyos
+except ImportError:
+    pyos = None
+
 from . import commands
 from . import utils
 
@@ -29,7 +34,7 @@ MEMORY = 'MEMORY'
 class Task(mincepy.BaseSavableObject):
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
     ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
-             '_stdout', '_stderr')
+             '_stdout', '_stderr', 'pyos_path')
 
     def __init__(self,
                  cmd: commands.Command,
@@ -52,6 +57,11 @@ class Task(mincepy.BaseSavableObject):
         self._log_file = self._historian.create_file('task_log', encoding='utf-8')
         self._stdout = self._historian.create_file('stdout', encoding='utf-8')
         self._stderr = self._historian.create_file('stderr', encoding='utf-8')
+
+        if pyos is not None:
+            self.pyos_path = pyos.pyos.pwd()
+        else:
+            self.pyos_path = None
 
     @property
     def state(self):
@@ -95,7 +105,12 @@ class Task(mincepy.BaseSavableObject):
 
     # @mincepy.track
     def run(self):
-        with self._capture_log(), self._capture_stds():
+        if pyos and self.pyos_path is not None:
+            path_context = pyos.working_path(self.pyos_path)
+        else:
+            path_context = utils.null_context()
+
+        with self._capture_log(), self._capture_stds(), path_context:
             try:
                 self.state = RUNNING
                 if self.folder and not os.path.exists(self.folder):

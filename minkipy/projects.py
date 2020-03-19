@@ -1,6 +1,11 @@
 from typing import Optional
 import uuid
 
+try:
+    import pyos
+except ImportError:
+    pyos = None
+
 import kiwipy
 import mincepy
 
@@ -54,6 +59,9 @@ class Project:
         settings.set_communicator(kiwipy.connect(self.kiwipy['connection_params']))
 
         mincepy.set_historian(historian)
+        if pyos is not None:
+            pyos.lib.init()
+
         _set_working_on(self)
 
     def set_as_active(self):

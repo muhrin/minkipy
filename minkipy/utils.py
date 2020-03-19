@@ -275,4 +275,10 @@ class TextMultiplexer(io.TextIOBase):
     # TODO: Finish the methods/properties here
 
 
+@contextlib.contextmanager
+def null_context():
+    """A context that does nothing"""
+    yield
+
+
 HISTORIAN_TYPES = (ScriptsStore,)
