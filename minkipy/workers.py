@@ -5,7 +5,7 @@ from . import queues
 __all__ = ('run',)
 
 
-def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.):
+def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.) -> int:
     """
     Process a number of tasks from the given queue
 
@@ -19,7 +19,7 @@ def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.):
             with queue.next_task(timeout=timeout) as fetched:
                 fetched.run()
             num_processed += 1
-            if num_processed >= max_tasks:
-                break
+            if max_tasks > 0 and num_processed >= max_tasks:
+                return num_processed
     except kiwipy.QueueEmpty:
         return num_processed
