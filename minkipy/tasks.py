@@ -20,6 +20,7 @@ __all__ = ('QUEUED', 'HELD', 'RUNNING', 'DONE', 'FAILED', 'CANCELED', 'TIMEOUT',
            'task')
 
 # Possible states
+CREATED = 'created'
 QUEUED = 'queued'
 HELD = 'held'
 PROCESSING = 'processing'
@@ -29,6 +30,8 @@ FAILED = 'FAILED'
 CANCELED = 'CANCELED'
 TIMEOUT = 'TIMEOUT'
 MEMORY = 'MEMORY'
+
+logger = logging.getLogger(__name__)
 
 
 class Task(mincepy.BaseSavableObject):
@@ -50,7 +53,7 @@ class Task(mincepy.BaseSavableObject):
         if files:
             for file in files:
                 self.add_files(file)
-        self._state = ''
+        self._state = CREATED
         self.error = ''
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one
         self.log_level = logging.WARNING
@@ -62,6 +65,13 @@ class Task(mincepy.BaseSavableObject):
             self.pyos_path = pyos.pyos.pwd()
         else:
             self.pyos_path = None
+
+    def __str__(self) -> str:
+        str_list = []
+        str_list.append("state={}".format(self._state))
+        if self.error:
+            str_list.append("[{}]".format(self.error))
+        return " ".join(str_list)
 
     @property
     def state(self):
@@ -105,30 +115,33 @@ class Task(mincepy.BaseSavableObject):
 
     # @mincepy.track
     def run(self):
-        if pyos and self.pyos_path is not None:
-            path_context = pyos.working_path(self.pyos_path)
-        else:
-            path_context = utils.null_context()
+        with self._capture_log(), self._capture_stds():
+            if pyos and self.pyos_path is not None:
+                path_context = pyos.working_path(self.pyos_path)
+                logger.debug("Running in pyos path '%s'", self.pyos_path)
+            else:
+                logger.debug("Running without pyos")
+                path_context = utils.null_context()
 
-        with self._capture_log(), self._capture_stds(), path_context:
-            try:
-                self.state = RUNNING
-                if self.folder and not os.path.exists(self.folder):
-                    os.makedirs(self.folder)
-                self.copy_files_to(self.folder)
+            with path_context:
+                try:
+                    self.state = RUNNING
+                    if self.folder and not os.path.exists(self.folder):
+                        os.makedirs(self.folder)
+                    self.copy_files_to(self.folder)
 
-                # Change the directory to the running folder and back at the end
-                with utils.working_directory(self.folder):
-                    result = self._cmd.run()
+                    # Change the directory to the running folder and back at the end
+                    with utils.working_directory(self.folder):
+                        result = self._cmd.run()
 
-                self._state = DONE
-                return result
-            except Exception as exc:
-                self.error = str(exc)
-                self.state = FAILED
-                raise
-            finally:
-                self.save()
+                    self._state = DONE
+                    return result
+                except Exception as exc:
+                    self.error = str(exc)
+                    self.state = FAILED
+                    raise
+                finally:
+                    self.save()
 
     def copy_files_to(self, folder):
         """Copy the task files to the given folder.  The folder must exist already."""
