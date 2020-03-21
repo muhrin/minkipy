@@ -16,8 +16,8 @@ except ImportError:
 from . import commands
 from . import utils
 
-__all__ = ('QUEUED', 'HELD', 'RUNNING', 'DONE', 'FAILED', 'CANCELED', 'TIMEOUT', 'MEMORY', 'Task',
-           'task')
+__all__ = ('CREATED', 'QUEUED', 'HELD', 'RUNNING', 'DONE', 'FAILED', 'CANCELED', 'TIMEOUT',
+           'MEMORY', 'Task', 'task')
 
 # Possible states
 CREATED = 'created'

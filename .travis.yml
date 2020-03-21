@@ -30,4 +30,6 @@ script:
   - pytest --cov=minkipy test
 
 
-after_success: coverage report
+after_success:
+  - coverage report
+  - codecov
