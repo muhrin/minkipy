@@ -23,13 +23,13 @@
 minkiPy
 =======
 
-.. image:: docs/source/img/mincepy.svg?sanitize=true
+.. image:: docs/source/img/mincepy.svg
    :height: 64px
    :width: 64px
    :alt: mincePy
    :target: https://travis-ci.com/github/muhrin/minkipy
 
-.. image:: docs/source/img/kiwipy.svg?sanitize=true
+.. image:: docs/source/img/kiwipy.svg
    :height: 64px
    :width: 64px
    :alt: kiwiPy
