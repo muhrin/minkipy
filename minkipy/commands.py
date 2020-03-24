@@ -78,6 +78,11 @@ class PythonCommand(Command):
         """Access the python script file"""
         return self._script_file
 
+    @property
+    def fn_name(self) -> str:
+        """The name of the function that will be run in the script"""
+        return self._function
+
     def run(self) -> Optional[List]:
         """Run this python command"""
         with self._script_file.open() as file:

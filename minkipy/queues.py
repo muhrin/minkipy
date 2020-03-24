@@ -26,6 +26,9 @@ class Queue:
         for msg in self._kiwi_queue:
             yield self._historian.load(msg.body[TASK_ID])
 
+    def __str__(self) -> str:
+        return self.name
+
     @property
     def name(self) -> str:
         return self._name
