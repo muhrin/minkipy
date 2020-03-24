@@ -73,7 +73,13 @@ class PythonCommand(Command):
     def __str__(self):
         return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
 
+    @property
+    def script_file(self):
+        """Access the python script file"""
+        return self._script_file
+
     def run(self) -> Optional[List]:
+        """Run this python command"""
         with self._script_file.open() as file:
             script = utils.load_script(file)
             run = utils.get_symbol(script, self._function)
