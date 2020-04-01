@@ -1,3 +1,5 @@
+import pathlib
+
 from mincepy.testing import *
 
 import minkipy
@@ -45,3 +47,14 @@ def test_command_none_in_args(test_project):
 
     loaded = mincepy.load(cid)  # type: minkipy.Command
     loaded.run()
+
+
+def test_load_script_from_file(test_project):
+    with minkipy.utils.working_directory(pathlib.Path(__file__).parent):
+        cmd = minkipy.command('script.py@add', args=(5, 10))
+        assert cmd.run() == 15
+
+        # Try using the abspath now
+        script_path = str(pathlib.Path('script.py').resolve())
+        cmd = minkipy.command('{}@add'.format(script_path), args=(5, 10))
+        assert cmd.run() == 15

@@ -3,5 +3,4 @@ def null():
 
 
 def add(a, b):
-    result = a + b
-    print(result)
+    return a + b
