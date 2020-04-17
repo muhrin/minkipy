@@ -28,7 +28,7 @@ def get_script_path(script_name):
     return script_path
 
 
-class ScriptsStore(mincepy.BaseSavableObject):
+class ScriptsStore(mincepy.SimpleSavable):
     TYPE_ID = uuid.UUID('16f09a79-544b-4b43-b1e5-9c62ee1ac99a')
     ATTRS = ('_scripts',)
 

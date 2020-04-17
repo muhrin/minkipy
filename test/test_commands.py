@@ -9,7 +9,7 @@ def simple_wf(obj):
     return obj
 
 
-class Workflow(mincepy.BaseSavableObject):
+class Workflow(mincepy.SimpleSavable):
     TYPE_ID = uuid.UUID('ef45250f-b8b1-46bb-8033-01cd115483a6')
 
     def add_to_ten(self, value):

@@ -55,7 +55,7 @@ class Project:
         }
 
     def workon(self):
-        historian = mincepy.historian(self.mincepy['connection_params'])
+        historian = mincepy.create_historian(self.mincepy['connection_params'])
         settings.set_communicator(kiwipy.connect(self.kiwipy['connection_params']))
 
         mincepy.set_historian(historian)

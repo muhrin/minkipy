@@ -11,12 +11,12 @@ from . import utils
 __all__ = 'Command', 'command', 'PythonCommand'
 
 
-class Command(mincepy.BaseSavableObject, metaclass=ABCMeta):
+class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
     TYPE_ID = uuid.UUID('38dc3093-058f-4934-9a48-292eeef35e11')
     ATTRS = ('_args',)
 
-    def __init__(self, args: Sequence, historian=None):
-        super().__init__(historian)
+    def __init__(self, args: Sequence):
+        super().__init__()
         self._args = mincepy.RefList(args)
 
     @property
@@ -62,7 +62,8 @@ class PythonCommand(Command):
     ATTRS = ('_script_file', '_function')
 
     def __init__(self, script_file, function='run', args=(), historian=None):
-        super(PythonCommand, self).__init__(args, historian)
+        super(PythonCommand, self).__init__(args)
+        self._historian = historian or mincepy.get_historian()
 
         script_file = Path(script_file)
         self._script_file = self._historian.create_file(script_file.name, 'utf-8')

@@ -34,7 +34,7 @@ MEMORY = 'MEMORY'
 logger = logging.getLogger(__name__)
 
 
-class Task(mincepy.BaseSavableObject):
+class Task(mincepy.SimpleSavable):
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
     ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
              '_stdout', '_stderr', 'pyos_path')
@@ -46,7 +46,9 @@ class Task(mincepy.BaseSavableObject):
                  historian=None):
         assert isinstance(folder,
                           str), "Folder name must be a string, got '{}'".format(type(folder))
-        super().__init__(historian)
+        super().__init__()
+        self._historian = historian or mincepy.get_historian()
+
         self._cmd = cmd
         self.folder = folder  # The name of the folder where the task will be ran
         self._files = mincepy.builtins.RefList()

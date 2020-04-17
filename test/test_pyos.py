@@ -3,7 +3,7 @@
 import pytest
 
 # Skip these tests if pyos is not installed
-pyos = pytest.importorskip("pyos")
+pyos = pytest.importorskip("pyos")  # pylint: disable=invalid-name
 import pyos.pyos
 from mincepy.testing import Car
 
@@ -30,7 +30,7 @@ def test_pyos_path_default(tmp_path, test_project):
 
 def test_pyos_path_custom(tmp_path, test_project):
     # Create a task from a function in a script
-    task_path = pyos.PyosPath('work/here/')
+    task_path = pyos.Path('work/here/')
     with minkipy.utils.working_directory(tmp_path):
         task = minkipy.task(car_maker)
         task.pyos_path = task_path
