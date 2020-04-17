@@ -17,3 +17,26 @@ def test_queue_basic(tmp_path, test_project):
         # Now check our original 'task' is finished
         task.sync()
         assert task.state == 'done', task.error
+
+
+def test_queue_iter(test_project):
+    queue = minkipy.queue('default')
+
+    for idx in range(10):
+        task = minkipy.task(do_stuff, [idx])
+        queue.submit(task)
+
+    for idx, queued in enumerate(queue):
+        assert queued.cmd.args[0] == idx
+
+
+def test_purge(test_project):
+    queue = minkipy.queue('default')
+
+    for idx in range(10):
+        task = minkipy.task(do_stuff, [idx])
+        queue.submit(task)
+
+    assert len(queue) == 10
+    queue.purge()
+    assert len(queue) == 0

@@ -1,8 +1,10 @@
-from contextlib import contextmanager
+import contextlib
+from typing import Iterator
 
 import kiwipy.rmq
 import mincepy
 
+import minkipy
 from . import settings
 from . import tasks
 
@@ -22,11 +24,13 @@ class Queue:
         self._kiwi_queue = communicator.task_queue(queue_name)
         self._name = queue_name
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tasks.Task]:
+        """Iterate through the tasks in this queue in the order they were submitted"""
         for msg in self._kiwi_queue:
             yield self._historian.load(msg.body[TASK_ID])
 
     def __str__(self) -> str:
+        """Get the name of this queue"""
         return self.name
 
     @property
@@ -36,7 +40,7 @@ class Queue:
     def empty(self) -> bool:
         return self._kiwi_queue.next_task(timeout=0, false=False) is None
 
-    @contextmanager
+    @contextlib.contextmanager
     def next_task(self, timeout=None):
         with self._kiwi_queue.next_task(timeout=timeout) as ktask:
             with ktask.processing() as outcome:
@@ -56,7 +60,7 @@ class Queue:
                 finally:
                     task.queue = ''
 
-    def submit(self, *tasks):  # pylint: disable=redefined-outer-name
+    def submit(self, *tasks: 'minkipy.Task'):  # pylint: disable=redefined-outer-name
         """Submit one or more tasks to the queue"""
         for task in tasks:
             self.submit_one(task)

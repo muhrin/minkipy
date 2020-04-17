@@ -16,3 +16,8 @@ def test_create_task(tmp_path, test_project):
 
         assert t1.state == minkipy.DONE
         assert t2.state == minkipy.DONE
+
+
+def test_empty(test_project):
+    test_queue = minkipy.queue('test-queue')
+    assert minkipy.run(test_queue) == 0
