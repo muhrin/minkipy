@@ -42,6 +42,11 @@ setup(
             'pylint',
             'twine',
         ],
+        'docs': [
+            'nbsphinx',
+            'sphinx',
+            'sphinx-autobuild',
+        ]
     },
     packages=[
         'minkipy',
