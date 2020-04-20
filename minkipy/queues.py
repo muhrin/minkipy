@@ -4,7 +4,7 @@ from typing import Iterator
 import kiwipy.rmq
 import mincepy
 
-import minkipy
+import minkipy  # pylint: disable=unused-import
 from . import settings
 from . import tasks
 
@@ -14,6 +14,7 @@ TASK_ID = 'task_id'
 
 
 class Queue:
+    """A task queue"""
 
     def __init__(self,
                  communicator: kiwipy.rmq.RmqThreadCommunicator,
@@ -23,6 +24,12 @@ class Queue:
         self._historian = historian
         self._kiwi_queue = communicator.task_queue(queue_name)
         self._name = queue_name
+
+    def size(self):
+        count = 0
+        for _ in self:
+            count += 1
+        return count
 
     def __iter__(self) -> Iterator[tasks.Task]:
         """Iterate through the tasks in this queue in the order they were submitted"""

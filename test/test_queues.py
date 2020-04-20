@@ -1,5 +1,7 @@
 import minkipy
 
+# pylint: disable=unused-argument
+
 
 def do_stuff(arg):
     return arg
@@ -29,14 +31,6 @@ def test_queue_iter(test_project):
     for idx, queued in enumerate(queue):
         assert queued.cmd.args[0] == idx
 
-
-def test_purge(test_project):
-    queue = minkipy.queue('default')
-
-    for idx in range(10):
-        task = minkipy.task(do_stuff, [idx])
-        queue.submit(task)
-
-    assert len(queue) == 10
+    assert queue.size() == 10
     queue.purge()
-    assert len(queue) == 0
+    assert queue.size() == 0
