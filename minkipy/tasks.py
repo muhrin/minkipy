@@ -31,10 +31,14 @@ CANCELED = 'CANCELED'
 TIMEOUT = 'TIMEOUT'
 MEMORY = 'MEMORY'
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class Task(mincepy.SimpleSavable):
+    """A minkiPy task.  This represents a unit of work that can be submitted to a queue."""
+
+    # pylint: disable=too-many-instance-attributes
+
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
     ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
              '_stdout', '_stderr', 'pyos_path')
@@ -119,7 +123,7 @@ class Task(mincepy.SimpleSavable):
     def run(self):
         with self._capture_log(), self._capture_stds():
             if pyos and self.pyos_path is not None:
-                path_context = pyos.working_path(self.pyos_path)
+                path_context = pyos.pathlib.working_path(self.pyos_path)
                 logger.debug("Running in pyos path '%s'", self.pyos_path)
             else:
                 logger.debug("Running without pyos")
@@ -161,17 +165,17 @@ class Task(mincepy.SimpleSavable):
             yield
             return
 
-        logger = logging.getLogger()  # Get the top level logger
+        root_logger = logging.getLogger()  # Get the top level logger
         with self.log_file.open('a') as file:
             handler = logging.StreamHandler(file)
             handler.setLevel(self.log_level)
             handler.setFormatter(
                 logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
             try:
-                logger.addHandler(handler)
+                root_logger.addHandler(handler)
                 yield
             finally:
-                logger.removeHandler(handler)
+                root_logger.removeHandler(handler)
 
     @contextmanager
     def _capture_stds(self):
