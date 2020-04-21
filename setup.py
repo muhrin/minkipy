@@ -54,6 +54,6 @@ setup(
     include_package_data=True,
     test_suite='test',
     entry_points={
-        'console_scripts': ['minki = minkipy.cli.main:minki'],
+        'console_scripts': ['minki = minkipy.cli:minki'],
         'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',]
     })
