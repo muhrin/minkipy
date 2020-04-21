@@ -5,9 +5,9 @@ def add(a, b):
     return a + b
 
 
-def test_create_task(tmp_path, test_project):
+def test_create_task(tmp_path, test_project, queue_name):
     with minkipy.utils.working_directory(tmp_path):
-        test_queue = minkipy.queue('test-queue')
+        test_queue = minkipy.queue(queue_name)
         t1 = minkipy.task(add, (4, 5))
         t2 = minkipy.task(add, (24, 56))
         test_queue.submit(t1, t2)
@@ -18,6 +18,6 @@ def test_create_task(tmp_path, test_project):
         assert t2.state == minkipy.DONE
 
 
-def test_empty(test_project):
-    test_queue = minkipy.queue('test-queue')
+def test_empty(test_project, queue_name):
+    test_queue = minkipy.queue(queue_name)
     assert minkipy.run(test_queue) == 0

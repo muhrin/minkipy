@@ -20,6 +20,10 @@ __all__ = ('Project', 'workon', 'project', 'working_on', 'get_active_project', '
 _working_on = None  # type: Optional[Project]
 
 
+def _make_default_queue_name(project_name) -> str:
+    return "{}-default-queue".format(project_name)
+
+
 class Project:
 
     def __init__(self, name: str):
@@ -30,6 +34,7 @@ class Project:
         self.kiwipy = {'connection_params': 'amqp://guest:guest@127.0.0.1/{}'.format(name)}
         # Mincepy settings
         self.mincepy = {'connection_params': 'mongodb://127.0.0.1/{}'.format(name)}
+        self.default_queue = _make_default_queue_name(name)
 
     @property
     def uuid(self) -> uuid.UUID:
@@ -37,12 +42,15 @@ class Project:
 
     @classmethod
     def from_dict(cls, project_dict):
+        # pylint: disable=protected-access
         project = Project.__new__(Project)
 
         project.name = project_dict['name']
         project.kiwipy = project_dict['kiwipy']
         project.mincepy = project_dict['mincepy']
         project._uuid = uuid.UUID(project_dict['uuid'])
+        project.default_queue = project_dict.get('default_queue',
+                                                 _make_default_queue_name(project.name))
 
         return project
 
@@ -52,11 +60,20 @@ class Project:
             'uuid': str(self.uuid),
             'kiwipy': self.kiwipy,
             'mincepy': self.mincepy,
+            'default_queue': self.default_queue
         }
 
     def workon(self):
         historian = mincepy.create_historian(self.mincepy['connection_params'])
-        settings.set_communicator(kiwipy.connect(self.kiwipy['connection_params']))
+        kiwi_params = self.kiwipy['connection_params']
+        if isinstance(kiwi_params, str):
+            comm = kiwipy.connect(kiwi_params)
+        elif isinstance(kiwi_params, dict):
+            comm = kiwipy.connect(**kiwi_params)
+        else:
+            raise ValueError(
+                "kiwi parameters must be string or dictionary, got '{}'".format(kiwi_params))
+        settings.set_communicator(comm)
 
         mincepy.set_historian(historian)
         if pyos is not None:
@@ -117,7 +134,7 @@ def workon(project_name: str = None, auto_create=False):
             raise ValueError("Project '{}' does not exist.".format(project_name))
 
     if _working_on is not None and _working_on.uuid == proj.uuid:
-        return
+        return None
 
     proj.workon()
     return proj

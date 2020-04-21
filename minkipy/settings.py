@@ -6,9 +6,7 @@ from typing import Optional
 import click
 import kiwipy
 
-from . import defaults
-
-__all__ = ('get_communicator', 'settings_path', 'ENV_MINKIPY_SETTINGS')
+__all__ = 'get_communicator', 'settings_path', 'ENV_MINKIPY_SETTINGS'
 
 # pylint: disable=global-statement
 
@@ -28,10 +26,6 @@ def get_communicator() -> Optional[kiwipy.Communicator]:
 def set_communicator(communicator: kiwipy.Communicator):
     global _communicator
     _communicator = communicator
-
-
-def get_default_queue():
-    return defaults.QUEUE
 
 
 def read_settings():

@@ -19,12 +19,15 @@ def minki():
               default='',
               help="The folder to run the task in. "
               "Defaults to the id of the task as the folder name")
-@click.option('--queue', '-q', default=minkipy.defaults.QUEUE, help='The queue to send the task to')
+@click.option('--queue', '-q', default=None, help='The queue to send the task to')
 @click.argument('cmd', type=str)
 @click.argument('args', type=str, nargs=-1)
 def submit(project, folder, queue, cmd, args):
-    """Submit a task to a queue"""
+    """Submit a task to a queue.  Will use the project default queue if not supplied."""
     minkipy.workon(project)
+    if queue is None:
+        queue = minkipy.get_active_project().default_queue
+
     task = minkipy.task(cmd, args, folder)
     minkipy.queue(queue).submit(task)
 
@@ -36,10 +39,13 @@ def submit(project, folder, queue, cmd, args):
               '-t',
               default=10.,
               help='The maximum time (in seconds) to wait for a new task')
-@click.argument('queue', type=str, default=minkipy.defaults.QUEUE)
+@click.argument('queue', type=str, default=None)
 def run(project, max_tasks, timeout, queue):
-    """Process a number of tasks"""
+    """Process a number of tasks.  Will use the project default queue if not supplied."""
     minkipy.workon(project)
+    if queue is None:
+        queue = minkipy.get_active_project().default_queue
+
     task_queue = minkipy.queue(queue)
     num_ran = minkipy.workers.run(task_queue, max_tasks, timeout)
     click.echo("Ran {} tasks".format(num_ran))
@@ -49,11 +55,11 @@ def run(project, max_tasks, timeout, queue):
 @click.option('--project', '-p', default=None, help='The project to use, defaults to active')
 @click.argument('queues', type=str, nargs=-1)
 def list(project, queues):  # pylint: disable=redefined-builtin
-    """List queued tasks.  If no queue supplied will use the default."""
+    """List queued tasks.  Will use the project default queue if not supplied."""
     minkipy.workon(project)
 
     if not queues:
-        queues = (minkipy.defaults.QUEUE,)
+        queues = (minkipy.get_active_project().default_queue,)
 
     for queue in queues:
         minki_queue = minkipy.queue(queue)
@@ -68,10 +74,12 @@ def list(project, queues):  # pylint: disable=redefined-builtin
 
 @minki.command()
 @click.option('--project', '-p', default=None, help='The project to use, defaults to active')
-@click.argument('queue', type=str, default=minkipy.defaults.QUEUE)
+@click.argument('queue', type=str, default=None)
 def purge(project, queue):
-    """Remove all the tasks in a queue"""
+    """Remove all the tasks in a queue.  Will use the project default queue if not supplied."""
     minkipy.workon(project)
+    if queue is None:
+        queue = minkipy.get_active_project().default_queue
 
     minki_queue = minkipy.queue(queue)
     num_purged = minki_queue.purge()

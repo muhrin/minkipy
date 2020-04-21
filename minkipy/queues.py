@@ -5,6 +5,7 @@ import kiwipy.rmq
 import mincepy
 
 import minkipy  # pylint: disable=unused-import
+from . import projects
 from . import settings
 from . import tasks
 
@@ -113,7 +114,7 @@ def queue(name: str = None,
 
     """
     if name is None:
-        name = settings.get_default_queue()
+        name = projects.get_active_project().default_queue
 
     communicator = communicator or settings.get_communicator()
     historian = historian or mincepy.get_historian()

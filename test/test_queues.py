@@ -7,9 +7,9 @@ def do_stuff(arg):
     return arg
 
 
-def test_queue_basic(tmp_path, test_project):
+def test_queue_basic(tmp_path, test_project, queue_name):
     with minkipy.utils.working_directory(tmp_path):
-        queue = minkipy.queue('default')
+        queue = minkipy.queue(queue_name)
         task = minkipy.task(do_stuff, ['stuff'])
         queue.submit(task)
 
@@ -21,8 +21,8 @@ def test_queue_basic(tmp_path, test_project):
         assert task.state == 'done', task.error
 
 
-def test_queue_iter(test_project):
-    queue = minkipy.queue('default')
+def test_queue_iter(test_project, queue_name):
+    queue = minkipy.queue(queue_name)
 
     for idx in range(10):
         task = minkipy.task(do_stuff, [idx])

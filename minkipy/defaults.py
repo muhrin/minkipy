@@ -1,1 +1,1 @@
-QUEUE = 'default-queue'
+"""Place for minki defaults"""
