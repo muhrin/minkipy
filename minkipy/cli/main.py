@@ -57,7 +57,6 @@ def run(project, max_tasks, timeout, queue):
 def list(project, queues):  # pylint: disable=redefined-builtin
     """List queued tasks.  Will use the project default queue if not supplied."""
     proj = minkipy.workon(project)
-
     if not queues:
         queues = (proj.default_queue,)
 
@@ -74,7 +73,7 @@ def list(project, queues):  # pylint: disable=redefined-builtin
 
 @minki.command()
 @click.option('--project', '-p', default=None, help='The project to use, defaults to active')
-@click.argument('queue', type=str, default=None)
+@click.argument('queue', type=str, default=None, required=False)
 def purge(project, queue):
     """Remove all the tasks in a queue.  Will use the project default queue if not supplied."""
     proj = minkipy.workon(project)

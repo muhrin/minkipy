@@ -37,6 +37,9 @@ class Project:
         self.mincepy = {'connection_params': 'mongodb://127.0.0.1/{}'.format(name)}
         self.default_queue = _make_default_queue_name(name)
 
+    def __repr__(self) -> str:
+        return "Project('{}')".format(self.name)
+
     @property
     def uuid(self) -> uuid.UUID:
         return self._uuid
