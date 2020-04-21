@@ -41,7 +41,7 @@ class Task(mincepy.SimpleSavable):
 
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
     ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
-             '_stdout', '_stderr', 'pyos_path')
+             '_stdout', '_stderr', '_pyos_path')
 
     def __init__(self,
                  cmd: commands.Command,
@@ -68,9 +68,9 @@ class Task(mincepy.SimpleSavable):
         self._stderr = self._historian.create_file('stderr', encoding='utf-8')
 
         if pyos is not None:
-            self.pyos_path = pyos.pathlib.Path().resolve()
+            self._pyos_path = pyos.os.getcwd()  # type: str
         else:
-            self.pyos_path = None
+            self._pyos_path = None
 
     def __str__(self) -> str:
         str_list = []
@@ -111,6 +111,20 @@ class Task(mincepy.SimpleSavable):
     def stderr(self) -> mincepy.builtins.BaseFile:
         """Get the standard err file"""
         return self._stderr
+
+    @property
+    def pyos_path(self):
+        if self._pyos_path is None:
+            return None
+
+        return pyos.pathlib.PurePath(self._pyos_path)
+
+    @pyos_path.setter
+    def pyos_path(self, new_path):
+        if new_path is None:
+            self._pyos_path = None
+        else:
+            self._pyos_path = str(new_path)
 
     # @mincepy.track
     def add_files(self, filename: [str, Path]):
