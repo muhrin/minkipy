@@ -68,7 +68,7 @@ class Task(mincepy.SimpleSavable):
         self._stderr = self._historian.create_file('stderr', encoding='utf-8')
 
         if pyos is not None:
-            self.pyos_path = pyos.pyos.pwd()
+            self.pyos_path = pyos.pathlib.Path().resolve()
         else:
             self.pyos_path = None
 

@@ -6,7 +6,7 @@ from typing import Optional
 import click
 import kiwipy
 
-from . import default
+from . import defaults
 
 __all__ = ('get_communicator', 'settings_path', 'ENV_MINKIPY_SETTINGS')
 
@@ -31,7 +31,7 @@ def set_communicator(communicator: kiwipy.Communicator):
 
 
 def get_default_queue():
-    return default.QUEUE
+    return defaults.QUEUE
 
 
 def read_settings():

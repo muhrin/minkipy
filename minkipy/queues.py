@@ -1,5 +1,5 @@
 import contextlib
-from typing import Iterator
+from typing import Iterator, Any
 
 import kiwipy.rmq
 import mincepy
@@ -68,12 +68,18 @@ class Queue:
                     task.queue = ''
 
     def submit(self, *tasks: 'minkipy.Task'):  # pylint: disable=redefined-outer-name
-        """Submit one or more tasks to the queue"""
+        """Submit one or more tasks to the queue.  The task ids will be returned."""
+        task_ids = []
         for task in tasks:
-            self.submit_one(task)
+            task_ids.append(self.submit_one(task))
 
-    def submit_one(self, task: tasks.Task):
-        """Submit one task to the queue"""
+        if len(tasks) == 1:
+            return task_ids[0]
+
+        return task_ids
+
+    def submit_one(self, task: tasks.Task) -> Any:
+        """Submit one task to the queue.  The object id for the task will be returned."""
         # Encode the task
         task.save()
         task_id = task.obj_id
@@ -81,6 +87,7 @@ class Queue:
         self._kiwi_queue.task_send(msg, no_reply=True)
         task.queue = self.name
         task.state = tasks.QUEUED
+        return task_id
 
     def purge(self) -> int:
         """Cancel all tasks in this queue"""

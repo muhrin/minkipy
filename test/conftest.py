@@ -1,14 +1,15 @@
 import os
-import pytest
+import uuid
 
-from mincepy.testing import historian, mongodb_archive
+from mincepy.testing import historian, mongodb_archive  # pylint: disable=unused-import
 import mincepy
+import pytest
 
 import minkipy
 
 
-@pytest.fixture
-def test_project(mongodb_archive, tmp_path):
+@pytest.fixture(autouse=True)
+def test_project(mongodb_archive, tmp_path):  # pylint: disable=unused-argument, redefined-outer-name
     os.environ[minkipy.ENV_MINKIPY_SETTINGS] = str(tmp_path / 'settings.json')
 
     project = minkipy.project('minki-tests')
@@ -17,3 +18,11 @@ def test_project(mongodb_archive, tmp_path):
 
     yield project
     mincepy.get_historian()
+
+
+@pytest.fixture
+def test_queue():
+    queue_name = "test-queue:{}".format(uuid.uuid4())
+    queue = minkipy.queue(queue_name)
+    yield queue
+    queue.purge()
