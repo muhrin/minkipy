@@ -28,7 +28,9 @@ class Queue:
 
     def size(self):
         count = 0
-        for _ in self:
+        for _ in self._kiwi_queue:
+            print("msg:")
+            print(_.body)
             count += 1
         return count
 
@@ -114,7 +116,7 @@ def queue(name: str = None,
 
     """
     if name is None:
-        name = projects.get_active_project().default_queue
+        name = projects.working_on().default_queue
 
     communicator = communicator or settings.get_communicator()
     historian = historian or mincepy.get_historian()

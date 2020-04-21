@@ -2,7 +2,6 @@ import os
 import uuid
 
 from mincepy.testing import historian, mongodb_archive  # pylint: disable=unused-import
-import mincepy
 import pytest
 
 import minkipy
@@ -19,8 +18,10 @@ def queue_name():
 @pytest.fixture
 def test_queue(queue_name):
     queue = minkipy.queue(queue_name)
+    # Make sure the queue is empty in case it was created before
+    minkipy.queue(queue_name).purge()
     yield queue
-    queue.purge()
+    minkipy.queue(queue_name).purge()
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +36,13 @@ def test_project(mongodb_archive, queue_name, tmp_path):  # pylint: disable=unus
                                                task_exchange='minki-tests',
                                                task_queue='minki-tests-queue',
                                                testing_mode=True)
+    project.set_as_active()
+
     project.workon()
+    # Make sure the queue is empty in case it was created before
+    minkipy.queue(project.default_queue).purge()
 
     yield project
-    mincepy.get_historian()
+
+    # Cleanup
+    minkipy.queue(project.default_queue).purge()

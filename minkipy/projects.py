@@ -18,6 +18,7 @@ __all__ = ('Project', 'workon', 'project', 'working_on', 'get_active_project', '
 
 # pylint: disable=invalid-name
 _working_on = None  # type: Optional[Project]
+PROJECTS_KEY = 'projects'
 
 
 def _make_default_queue_name(project_name) -> str:
@@ -81,8 +82,18 @@ class Project:
 
         _set_working_on(self)
 
+    def save(self):
+        """Save the project to the settings file"""
+        settings_dict = settings.read_settings()
+        settings_dict[PROJECTS_KEY][self.name] = self.to_dict()
+        settings.write_settings(settings_dict)
+
     def set_as_active(self):
-        set_active_project(self.name)
+        settings_dict = settings.read_settings()
+        # Make sure we're up to date
+        settings_dict[PROJECTS_KEY][self.name] = self.to_dict()
+        settings_dict[settings.ACTIVE_PROJECT_KEY] = self.name
+        settings.write_settings(settings_dict)
 
 
 def get_projects() -> dict:
@@ -113,7 +124,7 @@ def project(project_name: str = 'default') -> Project:
     return proj
 
 
-def workon(project_name: str = None, auto_create=False):
+def workon(project_name: str = None, auto_create=False) -> Optional[Project]:
     """
     Set the project currently being worked on.  This will set the global historian and kiwipy
     communicator so be careful if you were already using these.
@@ -134,7 +145,7 @@ def workon(project_name: str = None, auto_create=False):
             raise ValueError("Project '{}' does not exist.".format(project_name))
 
     if _working_on is not None and _working_on.uuid == proj.uuid:
-        return None
+        return proj
 
     proj.workon()
     return proj
@@ -148,6 +159,8 @@ def working_on() -> Project:
 
 
 def get_active_project() -> Optional[Project]:
+    """Gets the currently active project from the settings.  This may be not be the project
+    currently being worked on"""
     settings_dict = settings.read_settings()
     active = settings_dict.get(settings.ACTIVE_PROJECT_KEY, None)
     if active is None:
@@ -157,6 +170,7 @@ def get_active_project() -> Optional[Project]:
 
 
 def set_active_project(name):
+    """Set the currently active project in the settings"""
     settings_dict = settings.read_settings()
     if name not in settings_dict['projects']:
         raise ValueError("Project '{}' does not exist".format(name))

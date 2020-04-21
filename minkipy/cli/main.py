@@ -24,9 +24,9 @@ def minki():
 @click.argument('args', type=str, nargs=-1)
 def submit(project, folder, queue, cmd, args):
     """Submit a task to a queue.  Will use the project default queue if not supplied."""
-    minkipy.workon(project)
+    proj = minkipy.workon(project)
     if queue is None:
-        queue = minkipy.get_active_project().default_queue
+        queue = proj.default_queue
 
     task = minkipy.task(cmd, args, folder)
     minkipy.queue(queue).submit(task)
@@ -39,12 +39,12 @@ def submit(project, folder, queue, cmd, args):
               '-t',
               default=10.,
               help='The maximum time (in seconds) to wait for a new task')
-@click.argument('queue', type=str, default=None)
+@click.argument('queue', type=str, default=None, required=False)
 def run(project, max_tasks, timeout, queue):
     """Process a number of tasks.  Will use the project default queue if not supplied."""
-    minkipy.workon(project)
+    proj = minkipy.workon(project)
     if queue is None:
-        queue = minkipy.get_active_project().default_queue
+        queue = proj.default_queue
 
     task_queue = minkipy.queue(queue)
     num_ran = minkipy.workers.run(task_queue, max_tasks, timeout)
@@ -56,10 +56,10 @@ def run(project, max_tasks, timeout, queue):
 @click.argument('queues', type=str, nargs=-1)
 def list(project, queues):  # pylint: disable=redefined-builtin
     """List queued tasks.  Will use the project default queue if not supplied."""
-    minkipy.workon(project)
+    proj = minkipy.workon(project)
 
     if not queues:
-        queues = (minkipy.get_active_project().default_queue,)
+        queues = (proj.default_queue,)
 
     for queue in queues:
         minki_queue = minkipy.queue(queue)
@@ -77,9 +77,9 @@ def list(project, queues):  # pylint: disable=redefined-builtin
 @click.argument('queue', type=str, default=None)
 def purge(project, queue):
     """Remove all the tasks in a queue.  Will use the project default queue if not supplied."""
-    minkipy.workon(project)
+    proj = minkipy.workon(project)
     if queue is None:
-        queue = minkipy.get_active_project().default_queue
+        queue = proj.default_queue
 
     minki_queue = minkipy.queue(queue)
     num_purged = minki_queue.purge()
