@@ -1,7 +1,6 @@
 import os
 import uuid
 
-from mincepy.testing import historian, mongodb_archive  # pylint: disable=unused-import
 import pytest
 
 import minkipy
@@ -25,7 +24,7 @@ def test_queue(queue_name):
 
 
 @pytest.fixture(autouse=True)
-def test_project(mongodb_archive, queue_name, tmp_path):  # pylint: disable=unused-argument
+def test_project(queue_name, tmp_path):
     os.environ[minkipy.ENV_MINKIPY_SETTINGS] = str(tmp_path / 'settings.json')
 
     project = minkipy.project('minki-tests')
