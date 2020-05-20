@@ -4,8 +4,9 @@ import os
 from pathlib import Path
 import sys
 
-import minkipy
 import mincepy
+
+import minkipy
 
 
 def test_load_script():
@@ -66,14 +67,17 @@ def test_script_written(tmp_path, test_project):
 
 
 def do_some_logging(level):
-    logging.log(level, "I've got some bad news")
+    logging.log(level, "I've got some bad news...")
 
 
 def test_task_logging(tmp_path, test_project):
-    task = minkipy.task(do_some_logging, (logging.WARNING,), folder='test_task')
+    task = minkipy.task(do_some_logging, (logging.DEBUG,), folder='test_task')
+    task.log_level = logging.DEBUG - 1
     with minkipy.utils.working_directory(tmp_path):
         task.run()
-    assert "I've got some bad news" in task.log_file.read_text()
+
+    log_text = task.log_file.read_text()
+    assert "I've got some bad news" in log_text
 
     # Now turn logging off
     task = minkipy.task(do_some_logging, (logging.WARNING,), folder='test_task')

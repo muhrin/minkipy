@@ -181,15 +181,29 @@ class Task(mincepy.SimpleSavable):
 
         root_logger = logging.getLogger()  # Get the top level logger
         with self.log_file.open('a') as file:
+            root_logger.setLevel(self.log_level)
             handler = logging.StreamHandler(file)
+
             handler.setLevel(self.log_level)
             handler.setFormatter(
                 logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+            # Check if the root logger is currently set to a higher level than the level
+            # we want to log at which would mean we don't get the log messages.  If so,
+            # temporarily lower it.  See here for an explanation of why this is necessary:
+            # https://www.electricmonk.nl/log/2017/08/06/understanding-pythons-logging-module/
+            original_root_level = None
+            if root_logger.level > self.log_level:
+                original_root_level = root_logger
+                root_logger.setLevel(self.log_level)
+
             try:
                 root_logger.addHandler(handler)
                 yield
             finally:
                 root_logger.removeHandler(handler)
+                if original_root_level is not None:
+                    root_logger.setLevel(original_root_level)
 
     @contextmanager
     def _capture_stds(self):
