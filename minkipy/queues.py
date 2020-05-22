@@ -29,8 +29,6 @@ class Queue:
     def size(self):
         count = 0
         for _ in self._kiwi_queue:
-            print("msg:")
-            print(_.body)
             count += 1
         return count
 
