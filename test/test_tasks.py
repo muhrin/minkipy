@@ -73,11 +73,14 @@ def do_some_logging(level):
 def test_task_logging(tmp_path, test_project):
     task = minkipy.task(do_some_logging, (logging.DEBUG,), folder='test_task')
     task.log_level = logging.DEBUG - 1
+    task.save()
+
     with minkipy.utils.working_directory(tmp_path):
         task.run()
 
     log_text = task.log_file.read_text()
     assert "I've got some bad news" in log_text
+    assert str(task.obj_id) in log_text
 
     # Now turn logging off
     task = minkipy.task(do_some_logging, (logging.WARNING,), folder='test_task')

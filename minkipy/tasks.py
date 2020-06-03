@@ -136,6 +136,7 @@ class Task(mincepy.SimpleSavable):
     # @mincepy.track
     def run(self):
         with self._capture_log(), self._capture_stds():
+            logger.info("Starting task with id %s", self.obj_id)
             if pyos and self.pyos_path is not None:
                 path_context = pyos.pathlib.working_path(self.pyos_path)
                 logger.debug("Running in pyos path '%s'", self.pyos_path)
