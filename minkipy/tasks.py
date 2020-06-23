@@ -158,6 +158,7 @@ class Task(mincepy.SimpleSavable):
                     self._state = DONE
                     return result
                 except Exception as exc:
+                    logger.exception("Task '%s' excepted", self.obj_id)
                     self.error = str(exc)
                     self.state = FAILED
                     raise
