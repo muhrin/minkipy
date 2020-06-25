@@ -27,7 +27,7 @@ setup(name='minkipy',
       keywords='workflows schedulers',
       install_requires=[
           'click',
-          'mincepy[gui]>=0.12, <0.15',
+          'mincepy[gui]>=0.12, <0.16',
           'kiwipy[rmq]~=0.6',
       ],
       extras_require={
