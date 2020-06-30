@@ -63,12 +63,14 @@ def list(project, queues):  # pylint: disable=redefined-builtin
     for queue in queues:
         minki_queue = minkipy.queue(queue)
         click.echo("{}:".format(queue))
-        found_tasks = False
+        found = 0
         for task in minki_queue:
             click.echo("{} {}".format(task.obj_id, task.cmd))
-            found_tasks = True
-        if not found_tasks:
+            found += 1
+        if found == 0:
             click.echo("Empty")
+        else:
+            click.echo("{} total".format(found))
 
 
 @minki.command()
