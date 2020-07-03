@@ -46,3 +46,19 @@ def test_multiqueue_list(cli_runner, test_queue):
     assert common.dummy.__name__ in result.output
     assert str(500000) in result.output
     assert str('hello') in result.output
+
+
+def test_list_count(cli_runner, test_queue):
+    test_queue.submit(minkipy.task(common.dummy, args=(500000,)))
+    test_queue.submit(minkipy.task(common.dummy, args=('hello',)))
+
+    result = cli_runner.invoke(main.list, ['-c', test_queue.name])
+    assert result.exit_code == 0
+    assert "2 total" in result.output
+    assert "Empty" not in result.output
+
+    test_queue.purge()
+    result = cli_runner.invoke(main.list, ['-c', test_queue.name])
+    assert result.exit_code == 0
+    assert "total" not in result.output
+    assert "Empty" in result.output

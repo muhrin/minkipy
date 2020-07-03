@@ -53,8 +53,9 @@ def run(project, max_tasks, timeout, queue):
 
 @minki.command()
 @click.option('--project', '-p', default=None, help='The project to use, defaults to active')
+@click.option('--count', '-c', is_flag=True, help='Only show the number of tasks in each queue')
 @click.argument('queues', type=str, nargs=-1)
-def list(project, queues):  # pylint: disable=redefined-builtin
+def list(project, count: bool, queues):  # pylint: disable=redefined-builtin
     """List queued tasks.  Will use the project default queue if not supplied."""
     proj = minkipy.workon(project)
     if not queues:
@@ -65,7 +66,8 @@ def list(project, queues):  # pylint: disable=redefined-builtin
         click.echo("{}:".format(queue))
         found = 0
         for task in minki_queue:
-            click.echo("{} {}".format(task.obj_id, task.cmd))
+            if not count:
+                click.echo("{} {}".format(task.obj_id, task.cmd))
             found += 1
         if found == 0:
             click.echo("Empty")
