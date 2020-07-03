@@ -1,8 +1,16 @@
+import collections
 import contextlib
-from typing import Iterator, Any
+import functools
+from typing import Iterator, Any, Sequence, Dict
 
 import kiwipy.rmq
 import mincepy
+
+try:
+    import pyos
+except ImportError:
+    pyos = None
+import tabulate
 
 import minkipy  # pylint: disable=unused-import
 from . import projects
@@ -47,6 +55,10 @@ class Queue:
 
     def empty(self) -> bool:
         return self._kiwi_queue.next_task(timeout=0, false=False) is None
+
+    def list(self, verbosity: int = 1):
+        """Pretty-print the list of tasks."""
+        pprint(tuple(self), verbosity)
 
     @contextlib.contextmanager
     def next_task(self, timeout=None):
@@ -119,3 +131,40 @@ def queue(name: str = None,
     communicator = communicator or settings.get_communicator()
     historian = historian or mincepy.get_historian()
     return Queue(communicator, historian, name)
+
+
+def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
+    """Pretty print information about tasks"""
+    if verbosity < 0:
+        return
+
+    if not tasks_list:
+        print("Empty")
+        return
+
+    headers = ['obj_id', 'cmd', 'state', 'error']
+
+    def fetch(name, obj, transform=str):
+        return transform(getattr(obj, name))
+
+    # Create the getter functions that will fetch the data
+    getters = [functools.partial(fetch, col) for col in headers]
+    if pyos is not None:
+        headers.insert(1, 'pyos_path')
+        getters.insert(1, functools.partial(fetch, 'pyos_path', transform=pyos.os.path.relpath))
+
+    rows = []
+    state_counts = collections.defaultdict(int)  # type: Dict[str, int]
+    for task in tasks_list:
+        row = []
+        for getter in getters:
+            value = getter(task)
+            row.append(value)
+        state_counts[task.state] += 1
+        rows.append(row)
+
+    if verbosity >= 1:
+        print(tabulate.tabulate(rows, headers=headers if verbosity else None))
+
+    state_counts['total'] = len(tasks_list)
+    print(', '.join("{}: {}".format(state, count) for state, count in state_counts.items()))

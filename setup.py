@@ -29,6 +29,7 @@ setup(name='minkipy',
           'click',
           'mincepy[gui]>=0.12, <0.16',
           'kiwipy[rmq]~=0.6',
+          'tabulate',
       ],
       extras_require={
           'dev': [

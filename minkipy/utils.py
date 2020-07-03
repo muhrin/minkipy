@@ -114,31 +114,6 @@ class ScriptsNamespace:
         self._script_cache = {}
 
 
-#
-# class ExecutingScriptStore(ScriptsStore):
-#     TYPE_ID = uuid.UUID('612031b5-afdb-47a8-9374-769df25fbd1a')
-#
-#     def __init__(self):
-#         super().__init__()
-#
-#     def submit_script(self, name: str, kwargs: dict = None, run_directory=None, communicator=None):
-#         kwargs = kwargs or {}
-#         if run_directory is None:
-#             run_directory = "{}-{}".format(name, datetime_str())
-#
-#         # Run the presubmit if present
-#         with self.open(name) as script:
-#             script_obj = load_script(script)
-#             try:
-#                 script_obj.pre_submit(**kwargs)
-#             except AttributeError:
-#                 pass
-#
-#         # Re-open, this time for submitting
-#         with self.open(name) as script:
-#             submit_script(script, kwargs, run_directory, communicator)
-
-
 def make_valid_python_name(string):
     """Convert a filename into a valid python variable name
     Parts borrowed from:

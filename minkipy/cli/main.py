@@ -64,15 +64,8 @@ def list(project, count: bool, queues):  # pylint: disable=redefined-builtin
     for queue in queues:
         minki_queue = minkipy.queue(queue)
         click.echo("{}:".format(queue))
-        found = 0
-        for task in minki_queue:
-            if not count:
-                click.echo("{} {}".format(task.obj_id, task.cmd))
-            found += 1
-        if found == 0:
-            click.echo("Empty")
-        else:
-            click.echo("{} total".format(found))
+        verbosity = 2 if not count else 0
+        minki_queue.list(verbosity=verbosity)
 
 
 @minki.command()
