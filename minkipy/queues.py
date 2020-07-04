@@ -8,6 +8,7 @@ import mincepy
 
 try:
     import pyos
+    import pyos.pathlib
 except ImportError:
     pyos = None
 import tabulate
@@ -152,6 +153,7 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
     if pyos is not None:
         headers.insert(1, 'pyos_path')
         getters.insert(1, functools.partial(fetch, 'pyos_path', transform=pyos.os.path.relpath))
+        pyos_paths = collections.defaultdict(int)  # type: Dict[str, int]
 
     rows = []
     state_counts = collections.defaultdict(int)  # type: Dict[str, int]
@@ -161,10 +163,15 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
             value = getter(task)
             row.append(value)
         state_counts[task.state] += 1
+        if pyos is not None:
+            pyos_paths[pyos.os.path.relpath(task.pyos_path)] += 1
         rows.append(row)
 
     if verbosity >= 1:
         print(tabulate.tabulate(rows, headers=headers if verbosity else None))
 
     state_counts['total'] = len(tasks_list)
+    if pyos is not None:
+        for path, count in pyos_paths.items():
+            print("Tasks in {}: {}".format(path, count))
     print(', '.join("{}: {}".format(state, count) for state, count in state_counts.items()))
