@@ -81,7 +81,6 @@ class Task(mincepy.SimpleSavable):
 
     @property
     def state(self):
-        self.sync()
         return self._state
 
     @state.setter

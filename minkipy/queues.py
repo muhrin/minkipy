@@ -28,7 +28,7 @@ class Queue:
 
     def __init__(self,
                  communicator: kiwipy.rmq.RmqThreadCommunicator,
-                 historian,
+                 historian: mincepy.Historian,
                  queue_name='default-queue'):
         self._communicator = communicator
         self._historian = historian
@@ -59,7 +59,8 @@ class Queue:
 
     def list(self, verbosity: int = 1):
         """Pretty-print the list of tasks."""
-        pprint(tuple(self), verbosity)
+        obj_ids = [incoming.body[TASK_ID] for incoming in self._kiwi_queue]
+        pprint(self._historian.load(*obj_ids), verbosity)
 
     @contextlib.contextmanager
     def next_task(self, timeout=None):
@@ -152,7 +153,7 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
     getters = [functools.partial(fetch, col) for col in headers]
     if pyos is not None:
         headers.insert(1, 'pyos_path')
-        getters.insert(1, functools.partial(fetch, 'pyos_path', transform=pyos.os.path.relpath))
+        getters.insert(1, functools.partial(fetch, 'pyos_path'))
         pyos_paths = collections.defaultdict(int)  # type: Dict[str, int]
 
     rows = []
@@ -164,7 +165,7 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
             row.append(value)
         state_counts[task.state] += 1
         if pyos is not None:
-            pyos_paths[pyos.os.path.relpath(task.pyos_path)] += 1
+            pyos_paths[task.pyos_path] += 1
         rows.append(row)
 
     if verbosity >= 1:
