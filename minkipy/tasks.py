@@ -31,6 +31,8 @@ CANCELED = 'CANCELED'
 TIMEOUT = 'TIMEOUT'
 MEMORY = 'MEMORY'
 
+STATES = [CREATED, QUEUED, HELD, PROCESSING, RUNNING, DONE, FAILED, CREATED, TIMEOUT, MEMORY]
+
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 

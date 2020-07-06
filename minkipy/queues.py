@@ -3,6 +3,7 @@ import contextlib
 import functools
 from typing import Iterator, Any, Sequence, Dict
 
+import beautifultable
 import kiwipy.rmq
 import mincepy
 
@@ -11,7 +12,6 @@ try:
     import pyos.pathlib
 except ImportError:
     pyos = None
-import tabulate
 
 import minkipy  # pylint: disable=unused-import
 from . import projects
@@ -59,8 +59,12 @@ class Queue:
 
     def list(self, verbosity: int = 1):
         """Pretty-print the list of tasks."""
-        obj_ids = [incoming.body[TASK_ID] for incoming in self._kiwi_queue]
-        pprint(self._historian.load(*obj_ids), verbosity)
+
+        def load_generator():
+            for incoming in self._kiwi_queue:
+                yield self._historian.load(incoming.body[TASK_ID])
+
+        pprint(load_generator(), verbosity)
 
     @contextlib.contextmanager
     def next_task(self, timeout=None):
@@ -135,7 +139,7 @@ def queue(name: str = None,
     return Queue(communicator, historian, name)
 
 
-def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
+def pprint(tasks_list: Iterator[tasks.Task], verbosity: int = 2) -> None:
     """Pretty print information about tasks"""
     if verbosity < 0:
         return
@@ -145,6 +149,11 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
         return
 
     headers = ['obj_id', 'cmd', 'state', 'error']
+    col_widths = [26, 38, max(map(len, tasks.STATES)), 16]
+    col_align = [
+        beautifultable.ALIGN_RIGHT, beautifultable.ALIGN_LEFT, beautifultable.ALIGN_RIGHT,
+        beautifultable.ALIGN_LEFT
+    ]
 
     def fetch(name, obj, transform=str):
         return transform(getattr(obj, name))
@@ -154,11 +163,18 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
     if pyos is not None:
         headers.insert(1, 'pyos_path')
         getters.insert(1, functools.partial(fetch, 'pyos_path'))
+        col_widths.insert(1, 26)
+        col_align.insert(1, beautifultable.ALIGN_LEFT)
         pyos_paths = collections.defaultdict(int)  # type: Dict[str, int]
 
-    rows = []
+    table = _create_table()
+    table.column_headers = headers
+    table.column_widths = col_widths
+    table.column_alignments = col_align
+
     state_counts = collections.defaultdict(int)  # type: Dict[str, int]
-    for task in tasks_list:
+
+    def get_row(task) -> Sequence:
         row = []
         for getter in getters:
             value = getter(task)
@@ -166,13 +182,26 @@ def pprint(tasks_list: Sequence[tasks.Task], verbosity: int = 2) -> None:
         state_counts[task.state] += 1
         if pyos is not None:
             pyos_paths[task.pyos_path] += 1
-        rows.append(row)
+        state_counts['total'] += 1
+        return row
 
-    if verbosity >= 1:
-        print(tabulate.tabulate(rows, headers=headers if verbosity else None))
+    for line in table.stream(map(get_row, tasks_list)):
+        if verbosity >= 1:
+            print(line)
 
-    state_counts['total'] = len(tasks_list)
-    if pyos is not None:
-        for path, count in pyos_paths.items():
-            print("Tasks in {}: {}".format(path, count))
-    print(', '.join("{}: {}".format(state, count) for state, count in state_counts.items()))
+    if state_counts['total'] == 0:
+        print("Empty")
+    else:
+        if pyos is not None:
+            for path, count in pyos_paths.items():
+                print("Tasks in {}: {}".format(path, count))
+        print(', '.join("{}: {}".format(state, count) for state, count in state_counts.items()))
+
+
+def _create_table() -> beautifultable.BeautifulTable:
+    """Creates a new table for printing"""
+    table = beautifultable.BeautifulTable()
+    table.set_style(beautifultable.STYLE_COMPACT)
+    table.width_exceed_policy = beautifultable.WEP_ELLIPSIS
+
+    return table
