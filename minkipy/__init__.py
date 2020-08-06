@@ -9,6 +9,7 @@ from .workers import *
 # Keep the linter happy
 from . import defaults
 from . import projects
+from . import pyos_extensions
 from . import version
 from . import workers
 

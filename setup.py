@@ -46,7 +46,8 @@ setup(name='minkipy',
               'nbsphinx',
               'sphinx',
               'sphinx-autobuild',
-          ]
+          ],
+          'pyos': ['pyos>=0.7.5', 'cmd2'],
       },
       packages=[
           'minkipy',
@@ -56,5 +57,6 @@ setup(name='minkipy',
       test_suite='test',
       entry_points={
           'console_scripts': ['minki = minkipy.cli.main:minki'],
-          'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',]
+          'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',],
+          'pyos.plugins.shell': ['pyos_commands = minkipy.pyos_extensions:get_commands',],
       })
