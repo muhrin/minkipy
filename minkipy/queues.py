@@ -168,9 +168,9 @@ def pprint(tasks_list: Iterator[tasks.Task], verbosity: int = 2) -> None:
         pyos_paths = collections.defaultdict(int)  # type: Dict[str, int]
 
     table = _create_table()
-    table.column_headers = headers
-    table.column_widths = col_widths
-    table.column_alignments = col_align
+    table.columns.header = headers
+    table.columns.width = col_widths
+    table.columns.alignment = col_align
 
     state_counts = collections.defaultdict(int)  # type: Dict[str, int]
 
@@ -202,6 +202,6 @@ def _create_table() -> beautifultable.BeautifulTable:
     """Creates a new table for printing"""
     table = beautifultable.BeautifulTable()
     table.set_style(beautifultable.STYLE_COMPACT)
-    table.width_exceed_policy = beautifultable.WEP_ELLIPSIS
+    table.columns.width_exceed_policy = beautifultable.WEP_ELLIPSIS
 
     return table

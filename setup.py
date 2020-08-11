@@ -26,7 +26,7 @@ setup(name='minkipy',
       ],
       keywords='workflows schedulers',
       install_requires=[
-          'beautifultable',
+          'beautifultable~=1.0.0',
           'click',
           'mincepy[gui]>=0.12, <0.16',
           'kiwipy[rmq]~=0.6',
