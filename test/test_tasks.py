@@ -129,3 +129,20 @@ def test_task_exception(tmp_path, test_project):
         task.run()
 
     assert msg in task.log_file.read_text()
+
+
+def test_task_resubmit(tmp_path, test_project, test_queue):
+    task = minkipy.task(my_task, args=[
+        'Arrrgg...',
+    ])
+    test_queue.submit(task)
+
+    with test_queue.next_task(timeout=2.) as incoming:
+        incoming.run()
+
+    assert task.queue == test_queue.name
+    assert task.state == minkipy.DONE
+
+    task.resubmit()
+    assert task.state == minkipy.QUEUED
+    assert task in test_queue

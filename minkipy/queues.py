@@ -1,7 +1,8 @@
 import collections
 import contextlib
 import functools
-from typing import Iterator, Any, Sequence, Dict
+import logging
+from typing import Iterator, Any, Sequence, Dict, Union
 
 import beautifultable
 import kiwipy.rmq
@@ -19,6 +20,8 @@ from . import settings
 from . import tasks
 
 __all__ = 'Queue', 'queue'
+
+logger = logging.getLogger(__name__)
 
 TASK_ID = 'task_id'
 
@@ -45,6 +48,19 @@ class Queue:
         """Iterate through the tasks in this queue in the order they were submitted"""
         for msg in self._kiwi_queue:
             yield self._historian.load(msg.body[TASK_ID])
+
+    def __contains__(self, item: Union[tasks.Task, Any]) -> bool:
+        if isinstance(item, tasks.Task):
+            obj_id = item.obj_id
+        else:
+            # Assume we've been passed an object id
+            obj_id = item
+
+        for msg in self._kiwi_queue:
+            if obj_id == msg.body[TASK_ID]:
+                return True
+
+        return False
 
     def __str__(self) -> str:
         """Get the name of this queue"""
@@ -83,16 +99,29 @@ class Queue:
                     outcome.set_exception(exc)
                 else:
                     outcome.set_result(True)
-                finally:
-                    task.queue = ''
 
     def submit(self, *tasks: 'minkipy.Task'):  # pylint: disable=redefined-outer-name
         """Submit one or more tasks to the queue.  The task ids will be returned."""
         task_ids = []
+
+        # Get the ids of the current tasks
+        current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}
+        already_queued = []
         for task in tasks:
-            task_ids.append(self.submit_one(task))
+            task.save()
+            if task.obj_id in current_ids:
+                already_queued.append(task.obj_id)
+            else:
+                task_ids.append(self.submit_one(task))
+
+        if already_queued:
+            logger.warning("Skipping the following tasks because they are already in the queue: %s",
+                           already_queued)
 
         if len(tasks) == 1:
+            if not task_ids:
+                return None
+
             return task_ids[0]
 
         return task_ids
@@ -129,7 +158,6 @@ def queue(name: str = None,
           historian: mincepy.Historian = None):
     """Get a queue of the given name.  If the queue doesn't exist it will be
     created.  If None is passed the default queue will be used.
-
     """
     if name is None:
         name = projects.working_on().default_queue

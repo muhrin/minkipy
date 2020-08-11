@@ -34,3 +34,14 @@ def test_queue_iter(test_project, queue_name):
     assert queue.size() == 10
     queue.purge()
     assert queue.size() == 0
+
+
+def test_double_submission(test_project, test_queue: minkipy.Queue):
+    """Test that you can't submit the same task twice"""
+    task = minkipy.task(do_stuff, [None])
+    task.save()
+    submitted = test_queue.submit(task)
+    assert submitted == task.obj_id
+
+    # Should be skipped
+    assert not test_queue.submit(task)

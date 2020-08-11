@@ -13,6 +13,7 @@ try:
 except ImportError:
     pyos = None
 
+import minkipy
 from . import commands
 from . import utils
 
@@ -33,7 +34,7 @@ MEMORY = 'MEMORY'
 
 STATES = [CREATED, QUEUED, HELD, PROCESSING, RUNNING, DONE, FAILED, CREATED, TIMEOUT, MEMORY]
 
-logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+logger = logging.getLogger(__name__)
 
 
 class Task(mincepy.SimpleSavable):
@@ -49,14 +50,22 @@ class Task(mincepy.SimpleSavable):
                  cmd: commands.Command,
                  folder: str,
                  files: List[Path] = None,
-                 historian=None):
+                 historian: mincepy.Historian = None):
+        """Create a new task
+
+        :param cmd: the command to be executed
+        :param folder: the path to the folder where the task will be run
+        :param files: a list of dependent files to include with the task
+        :param historian: an optional historian to use (will use mincepy.get_historian() if not
+            supplied)
+        """
         assert isinstance(folder,
                           str), "Folder name must be a string, got '{}'".format(type(folder))
         super().__init__()
         self._historian = historian or mincepy.get_historian()
 
         self._cmd = cmd
-        self.folder = folder  # The name of the folder where the task will be ran
+        self.folder = folder  # The name of the folder where the task will be run
         self._files = mincepy.builtins.RefList()
         if files:
             for file in files:
@@ -127,14 +136,12 @@ class Task(mincepy.SimpleSavable):
         else:
             self._pyos_path = str(new_path)
 
-    # @mincepy.track
     def add_files(self, filename: [str, Path]):
         filename = Path(filename)
         file = self._historian.create_file(filename.name)
         file.from_disk(file)
         self._files.append(file)
 
-    # @mincepy.track
     def run(self):
         with self._capture_log(), self._capture_stds():
             logger.info("Starting task with id %s", self.obj_id)
@@ -165,6 +172,25 @@ class Task(mincepy.SimpleSavable):
                     raise
                 finally:
                     self.save()
+
+    def resubmit(self) -> bool:
+        """Resubmit this task if it has already been submitted before.
+
+        Will return `True` if the task was successfully resubmitted.
+        If the task has never been submitted or is still in the queue `False` will be returned.
+        """
+        if not self.queue:
+            # Has not been submitted to a queue
+            return False
+
+        with self._capture_log():
+            result = minkipy.queue(self.queue).submit(self)
+            if result is None:
+                logger.info("Failed to resubmit task '%s'.")
+            else:
+                logger.info("Resubmitted task '%s'.")
+
+        return result is not None
 
     def copy_files_to(self, folder):
         """Copy the task files to the given folder.  The folder must exist already."""
