@@ -47,7 +47,7 @@ setup(name='minkipy',
               'sphinx',
               'sphinx-autobuild',
           ],
-          'pyos': ['pyos>=0.7.5', 'cmd2'],
+          'pyos': ['pyos>=0.7.8', 'cmd2>=1.3.2'],
       },
       packages=[
           'minkipy',

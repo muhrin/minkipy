@@ -7,6 +7,7 @@ except ImportError:
         return []
 else:
     import argparse
+    import sys
 
     from . import projects
 
@@ -15,13 +16,16 @@ else:
         workon_parser.add_argument('project', type=str)
 
         @cmd2.with_argparser(workon_parser)
-        def do_workon(self, app: cmd2.Cmd, args):  # pylint: disable=no-self-use
+        def do_workon(self, args):  # pylint: disable=no-self-use
             try:
                 project = projects.workon(args.project)
             except ValueError as exc:
-                app.perror(exc)
+                print(exc, file=sys.stderr)
+                return 1
             else:
-                app.poutput("Switched to '{}'".format(project))
+                print("Switched to '{}'".format(project))
+
+            return 0
 
     def get_commands():
         """Get all the pyos shell commands served by minkipy"""
