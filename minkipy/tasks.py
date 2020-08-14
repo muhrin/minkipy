@@ -184,11 +184,18 @@ class Task(mincepy.SimpleSavable):
             return False
 
         with self._capture_log():
-            result = minkipy.queue(self.queue).submit(self)
-            if result is None:
-                logger.info("Failed to resubmit task '%s'.")
+            self.error = ''  # Reset this
+            try:
+                result = minkipy.queue(self.queue).submit(self)
+            except Exception:
+                self.sync()  # Reset out state
+                raise
             else:
-                logger.info("Resubmitted task '%s'.")
+                if result is None:
+                    logger.info("Failed to resubmit task '%s'.", self.obj_id)
+                    self.sync()  # Reset state back to what it was
+                else:
+                    logger.info("Resubmitted task '%s'.", self.obj_id)
 
         return result is not None
 
