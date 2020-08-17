@@ -173,11 +173,14 @@ class Task(mincepy.SimpleSavable):
                 finally:
                     self.save()
 
-    def resubmit(self) -> bool:
+    def resubmit(self, queue='') -> bool:
         """Resubmit this task if it has already been submitted before.
 
         Will return `True` if the task was successfully resubmitted.
         If the task has never been submitted or is still in the queue `False` will be returned.
+
+        :param queue: a queue name that can be supplied to resubmit on a particular queue, if not
+            supplied original queue that this task was submitted on will be used.
         """
         if not self.queue:
             # Has not been submitted to a queue
@@ -186,7 +189,8 @@ class Task(mincepy.SimpleSavable):
         with self._capture_log():
             self.error = ''  # Reset this
             try:
-                result = minkipy.queue(self.queue).submit(self)
+                submit_to = queue or self.queue
+                result = minkipy.queue(submit_to).submit(self)
             except Exception:
                 self.sync()  # Reset out state
                 raise

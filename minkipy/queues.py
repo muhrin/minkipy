@@ -84,6 +84,10 @@ class Queue:
 
     @contextlib.contextmanager
     def next_task(self, timeout=None):
+        """Get the next task from the queue.
+
+        :param timeout: the duration (in seconds) to wait for a task to become available
+        """
         with self._kiwi_queue.next_task(timeout=timeout) as ktask:
             with ktask.processing() as outcome:
                 msg = ktask.body
