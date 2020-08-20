@@ -8,13 +8,9 @@ import re
 import shutil
 import time
 import tempfile
-import typing
 from typing import Optional, Sequence
-import uuid
 
-import mincepy
-
-__all__ = 'ScriptsStore', 'load_script'
+__all__ = ('load_script',)
 
 
 def datetime_str() -> str:
@@ -26,92 +22,6 @@ def get_script_path(script_name):
     script_path = Path(os.path.abspath(os.path.dirname(__file__))) / script_name
     assert os.path.exists(script_name)
     return script_path
-
-
-class ScriptsStore(mincepy.SimpleSavable):
-    TYPE_ID = uuid.UUID('16f09a79-544b-4b43-b1e5-9c62ee1ac99a')
-    ATTRS = ('_scripts',)
-
-    def __init__(self, historian=None):
-        super().__init__(historian)
-        self._scripts = []  # type: typing.MutableSequence[mincepy.builtins.BaseFile]
-        self._scripts_namespace = ScriptsNamespace(self)
-
-    @property
-    def execute(self):
-        """Execute a script"""
-        return self._scripts_namespace
-
-    def insert(self, filename):
-        """Insert a script"""
-        with open(filename, 'rb') as script_file:
-            script = self.get(filename)
-            if script is None:
-                script = self._historian.create_file(filename, 'utf-8')
-
-            with script.open('wb') as script_db:
-                shutil.copyfileobj(script_file, script_db)
-
-        self._scripts.append(script)
-        self.save()
-
-    def remove(self, filename):
-        """Remove a script"""
-        for idx, script in enumerate(self._scripts):
-            if script.filename == filename:
-                del self._scripts[idx]
-                return True
-
-        return False
-
-    def get(self, name: str) -> typing.Optional[mincepy.builtins.BaseFile]:
-        for script in self._scripts:
-            if script.filename == name:
-                return script
-        return None
-
-    def get_names(self) -> typing.Sequence[str]:
-        return [script.filename for script in self._scripts]
-
-    @contextlib.contextmanager
-    def open(self, name: str):
-        """Open a script by name"""
-        with self.get(name).open('r') as file:
-            yield file
-
-    def print(self, name):
-        """Print a script by name"""
-        with self.open(name) as file:
-            print(file.read())
-
-
-class ScriptsNamespace:
-
-    def __init__(self, scripts_store: ScriptsStore):
-        self._scripts_store = scripts_store
-        self._script_cache = {}
-
-    def __dir__(self) -> typing.Iterable[str]:
-        return self._make_script_map().keys()
-
-    def __getattr__(self, item):
-        script_name = self._make_script_map()[item]
-        try:
-            return self._script_cache[script_name]
-        except KeyError:
-            with self._scripts_store.open(script_name) as file:
-                script = load_script(file)
-            self._script_cache[script_name] = script
-            return script
-
-    def _make_script_map(self):
-        return {
-            make_valid_python_name(script_name): script_name
-            for script_name in self._scripts_store.get_names()
-        }
-
-    def _invalidate_cache(self):
-        self._script_cache = {}
 
 
 def make_valid_python_name(string):
@@ -251,4 +161,4 @@ class TextMultiplexer(io.TextIOBase):
             stream.write(s)
 
 
-HISTORIAN_TYPES = (ScriptsStore,)
+HISTORIAN_TYPES = tuple()
