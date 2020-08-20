@@ -1,9 +1,9 @@
 """Extensions to mincePy and the mincePy GUI"""
-import collections
 from typing import Optional, Iterable
 
 import mincepy
 
+from . import projects
 from . import queues
 from . import tasks
 from . import commands
@@ -48,38 +48,27 @@ else:
                 elif isinstance(item, tasks.Task):
                     to_submit.append(item)
 
-            if isinstance(obj, Iterable):  # pylint: disable=isinstance-second-argument-not-valid-type
+            if self.is_task_or_task_record(obj):
+                append(obj)
+            else:
+                # Must be an iterable of tasks
                 for entry in obj:
                     append(entry)
-            else:
-                append(obj)
 
             if to_submit:
-                existing_queues = collections.defaultdict(int)
-                for task in to_submit:
-                    if task.queue:
-                        existing_queues[task.queue] += 1
-
-                queue = ''
-                if existing_queues:
-                    max_count = max(existing_queues.values())
-                    for name, count in existing_queues.items():
-                        if count == max_count:
-                            queue = name
-                            break
+                queue_name = projects.working_on().default_queue
 
                 parent = context[mincepy_gui.ActionContext.PARENT]
-                queue, ok = QtWidgets.QInputDialog().getText(  # pylint: disable=invalid-name
+                queue_name, ok = QtWidgets.QInputDialog().getText(  # pylint: disable=invalid-name
                     parent,
                     "Submit task(s)",  # Title
                     "Queue name:",  # Label
                     echo=QtWidgets.QLineEdit.Normal,
-                    text=queue)
+                    text=queue_name)
 
                 if ok:
-                    if queue:
-                        minki_queue = queues.queue(queue)
-                        minki_queue.submit(*to_submit)  # Submit the tasks
+                    if queue_name:
+                        queues.queue(queue_name).submit(*to_submit)  # Submit the tasks
                     else:
                         QtWidgets.QMessageBox.warning(parent, "Submit cancelled",
                                                       "Must supply queue name")

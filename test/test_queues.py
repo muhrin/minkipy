@@ -55,3 +55,23 @@ def test_remove(test_project, test_queue: minkipy.Queue):
     removed = test_queue.remove(task)
     assert removed == [obj_id]
     assert task not in test_queue
+
+
+def test_submit_to_different_queue(test_project, test_queue: minkipy.Queue):
+    task = minkipy.task(do_stuff, [None])
+    test_queue.submit(task)
+    assert task in test_queue
+
+    second_queue = minkipy.queue('second-test-queue')
+    second_queue.submit(task)
+    assert task not in test_queue
+    assert task in second_queue
+
+
+def test_queue_contains(test_project, test_queue: minkipy.Queue):
+    task = minkipy.task(do_stuff, [None])
+    task_id = test_queue.submit(task)
+    # Check the different possibilities for testing if a task is in a queue
+    assert task in test_queue
+    assert task_id in test_queue
+    assert str(task_id) in test_queue

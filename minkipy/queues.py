@@ -51,7 +51,7 @@ class Queue:
             yield self._historian.load(msg.body[TASK_ID])
 
     def __contains__(self, item: Union[tasks.Task, Any]) -> bool:
-        obj_id = self._historian.get_obj_id(item)
+        obj_id = self._historian.to_obj_id(item)
 
         for msg in self._kiwi_queue:
             if obj_id == msg.body[TASK_ID]:
@@ -104,6 +104,18 @@ class Queue:
     def submit(self, *tasks: 'minkipy.Task'):  # pylint: disable=redefined-outer-name
         """Submit one or more tasks to the queue.  The task ids will be returned."""
         task_ids = []
+
+        # First check if any of the passed tasks are already in queues in which case we have to
+        # remove them
+
+        existing_queues = collections.defaultdict(list)
+        for entry in tasks:
+            # Don't try to remove ones in this queue, this will be checked for on submitting
+            if entry.queue and entry.queue != self._name:
+                existing_queues[entry.queue].append(entry)
+
+        for name, queued_task in existing_queues.items():
+            queue(name).remove(*queued_task)
 
         # Get the ids of the current tasks
         current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}
