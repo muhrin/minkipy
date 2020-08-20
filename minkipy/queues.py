@@ -6,6 +6,7 @@ from typing import Iterator, Any, Sequence, Dict, Union
 
 import beautifultable
 import kiwipy.rmq
+from kiwipy.rmq import threadcomms
 import mincepy
 
 try:
@@ -50,11 +51,7 @@ class Queue:
             yield self._historian.load(msg.body[TASK_ID])
 
     def __contains__(self, item: Union[tasks.Task, Any]) -> bool:
-        if isinstance(item, tasks.Task):
-            obj_id = item.obj_id
-        else:
-            # Assume we've been passed an object id
-            obj_id = item
+        obj_id = self._historian.get_obj_id(item)
 
         for msg in self._kiwi_queue:
             if obj_id == msg.body[TASK_ID]:
@@ -141,20 +138,46 @@ class Queue:
         task.state = tasks.QUEUED
         return task_id
 
+    def remove(self, *task: Union[tasks.Task, Any]) -> list:
+        """Remove a task from the queue.  Can supply the task instance of the object id of the task.
+        Returns a list of the object ids of the removed tasks
+        """
+        obj_ids = set(map(self._historian.to_obj_id, task))
+        removed = []
+        for kiwi_task in self._kiwi_queue:
+            oid = kiwi_task.body[TASK_ID]
+            if oid in obj_ids:
+                self._drop_task(kiwi_task)
+                obj_ids.remove(oid)
+                removed.append(oid)
+
+            if not obj_ids:
+                break
+
+        return removed
+
     def purge(self) -> int:
         """Cancel all tasks in this queue"""
         num_cancelled = 0
-        for ktask in self._kiwi_queue:
-            with ktask.processing() as outcome:
-                task = self._historian.load(ktask.body[TASK_ID])  # type: tasks.Task
-                # There is a bug in kiwipy that prevents us from cancelling this future so
-                # for now just set a cancelled results.  In any case the result is not sent
-                # back for the time being.
-                outcome.set_result('Cancelled')
-            task.state = tasks.CANCELED
+        for kiwi_task in self._kiwi_queue:
+            self._drop_task(kiwi_task)
             num_cancelled += 1
 
         return num_cancelled
+
+    def _drop_task(self, kiwi_task: threadcomms.RmqThreadIncomingTask):
+        task = self._historian.load(kiwi_task.body[TASK_ID])  # type: tasks.Task
+
+        # There is a bug in kiwipy that prevents us from cancelling this future so
+        # for now just set a cancelled results.  In any case the result is not sent
+        # back for the time being.
+        with kiwi_task.processing() as outcome:
+            outcome.set_result('Cancelled')
+
+        task.queue = ''
+        task.state = tasks.CANCELED
+        task.save()
+        return task
 
 
 def queue(name: str = None,

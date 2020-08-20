@@ -152,10 +152,12 @@ def test_task_resubmit(tmp_path, test_project, test_queue):
     with test_queue.next_task(timeout=2.) as incoming:
         incoming.run()
 
-    # Now try resubmitting on different queue
+    # Now try resubmitting on different queue (priority)
     priority = minkipy.queue('priority')
     task.resubmit(queue='priority')
     assert task.state == minkipy.QUEUED
     assert task.queue == 'priority'
     assert task in priority
     assert not task.error
+    with minkipy.queue('priority').next_task(timeout=2.) as incoming:
+        incoming.run()

@@ -58,5 +58,6 @@ setup(name='minkipy',
       entry_points={
           'console_scripts': ['minki = minkipy.cli.main:minki'],
           'mincepy.plugins.types': ['minkipy_types = minkipy.provides:get_types',],
+          'mincepy_gui.actioners': ['minkipy_gui_actioners = minkipy.provides:get_actioners',],
           'pyos.plugins.shell': ['pyos_commands = minkipy.pyos_extensions:get_commands',],
       })

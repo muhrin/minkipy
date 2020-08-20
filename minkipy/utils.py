@@ -192,6 +192,9 @@ def working_directory(path):
 
 
 class TextMultiplexer(io.TextIOBase):
+    """Takes a primary output stream and sends all write command to it and all the secondary
+    streams.  Otherwise behaves like the primary stream.
+    """
 
     def __init__(self, primary, *secondary):
         super().__init__()
@@ -246,14 +249,6 @@ class TextMultiplexer(io.TextIOBase):
         self._primary.write(s)
         for stream in self._secondary:
             stream.write(s)
-
-    # TODO: Finish the methods/properties here
-
-
-@contextlib.contextmanager
-def null_context():
-    """A context that does nothing"""
-    yield
 
 
 HISTORIAN_TYPES = (ScriptsStore,)

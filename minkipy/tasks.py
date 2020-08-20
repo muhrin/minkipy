@@ -1,4 +1,8 @@
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
+try:
+    from contextlib import nullcontext
+except ImportError:
+    from contextlib2 import nullcontext
 import logging
 import os
 import uuid
@@ -150,7 +154,7 @@ class Task(mincepy.SimpleSavable):
                 logger.debug("Running in pyos path '%s'", self.pyos_path)
             else:
                 logger.debug("Running without pyos")
-                path_context = utils.null_context()
+                path_context = nullcontext()
 
             with path_context:
                 try:

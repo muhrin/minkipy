@@ -45,3 +45,13 @@ def test_double_submission(test_project, test_queue: minkipy.Queue):
 
     # Should be skipped
     assert not test_queue.submit(task)
+
+
+def test_remove(test_project, test_queue: minkipy.Queue):
+    task = minkipy.task(do_stuff, [None])
+    obj_id = test_queue.submit(task)
+    assert task in test_queue
+
+    removed = test_queue.remove(task)
+    assert removed == [obj_id]
+    assert task not in test_queue
