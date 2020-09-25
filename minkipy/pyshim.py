@@ -7,9 +7,10 @@ This is useful when you want new tasks to pick up any code changes you make afte
 from minkipy import utils
 
 
-def run_dynamically(script_file: str, function: str, args: tuple = (), kwargs: dict = None):
+def run_dynamically(_fn_spec: tuple, *args, **kwargs):
     """Run the given function from the script file passing the args and kwargs and returning the
     result"""
+    script_file, function = _fn_spec
     script = utils.load_script(script_file)
     print("Got script {}".format(script))
     run = utils.get_symbol(script, function)

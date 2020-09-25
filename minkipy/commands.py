@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import inspect
 from pathlib import Path
 import sys
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Mapping
 import uuid
 
 import mincepy
@@ -53,7 +53,7 @@ class PythonCommand(Command):
     ATTRS = ('_script_file', '_function', '_kwargs', '_dynamic')
 
     @classmethod
-    def build(cls, cmd, args: Sequence = (), dynamic=False, **kwargs):
+    def build(cls, cmd, args: Sequence = (), dynamic=False, kwargs: dict = None, **rest):
         function = 'run'  # The default function name
 
         if inspect.ismethod(cmd):
@@ -73,7 +73,7 @@ class PythonCommand(Command):
         else:
             raise ValueError("Unknown python function command '{}".format(cmd))
 
-        return PythonCommand(script_file, function, args, dynamic=dynamic, **kwargs)
+        return PythonCommand(script_file, function, args, dynamic=dynamic, kwargs=kwargs, **rest)
 
     # pylint: disable=too-many-arguments
     def __init__(self,
@@ -96,8 +96,7 @@ class PythonCommand(Command):
         """
         if dynamic:
             # Create the arguments for run_dynamically
-            kwargs = dict(script_file=script_file, function=function, args=args, kwargs=kwargs)
-            args = ()  # Just rely on the kwargs
+            args = ((script_file, function),) + args
             script_file = pyshim.__file__
             function = pyshim.run_dynamically.__name__
 
@@ -110,7 +109,7 @@ class PythonCommand(Command):
 
         self._dynamic = dynamic
         self._function = function
-        self._kwargs = kwargs or {}
+        self._kwargs = mincepy.RefDict(kwargs or {})
 
     def __str__(self):
         return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
@@ -130,7 +129,7 @@ class PythonCommand(Command):
         return self._function
 
     @property
-    def kwargs(self) -> dict:
+    def kwargs(self) -> Mapping:
         return self._kwargs
 
     def run(self) -> Optional[List]:

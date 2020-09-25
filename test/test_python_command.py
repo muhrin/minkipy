@@ -2,6 +2,8 @@ import inspect
 import os.path
 import pathlib
 
+import mincepy
+
 import minkipy
 
 # pylint: disable=invalid-name
@@ -52,3 +54,24 @@ def test_dynamic():
         assert dynamic.run() == 30.
     finally:
         os.remove(MODULE_PATH)
+
+
+def dummy(kwarg=None):
+    return kwarg
+
+
+def test_savable_kwargs():
+    """Test putting mincepy savable objects in the keyword arguments"""
+    car = mincepy.testing.Car(colour='red', make='ferrari')
+    car_id = car.save()
+    cmd = minkipy.PythonCommand.build(dummy, kwargs=dict(kwarg=car))
+    cmd_id = cmd.save()
+
+    # Delete everything, reload and check that we've still got the same car
+    del car, cmd
+
+    cmd = mincepy.load(cmd_id)
+    assert cmd.kwargs['kwarg'].obj_id == car_id
+
+    result = cmd.run()
+    assert result.obj_id == car_id
