@@ -1,8 +1,9 @@
 import io
 import logging
 import os
-from pathlib import Path
+import pathlib
 import sys
+from typing import Union
 
 import mincepy
 import pytest
@@ -66,7 +67,7 @@ def test_script_written(tmp_path, test_project):
 
     with minkipy.utils.working_directory(tmp_path):
         task.run()
-    assert os.path.isfile(str(tmp_path / folder / Path(__file__).name))
+    assert os.path.isfile(str(tmp_path / folder / pathlib.Path(__file__).name))
 
 
 def do_some_logging(level):
@@ -163,34 +164,40 @@ def test_task_resubmit(tmp_path, test_project, test_queue):
         incoming.run()
 
 
-def add_numbers(filename: str):
-    with open(filename, 'r') as file:
+def add_numbers(filename: Union[str, pathlib.Path]):
+    with open(str(filename), 'r') as file:
         numbers = [int(line.rstrip()) for line in file.readlines()]
     return sum(numbers)
 
 
 def test_task_files(tmp_path, test_project):
-    FILENAME = Path('numbers.dat')
-    TASK_PATH = tmp_path / 'task'  # where to run the task itself
+    # Have to do this as pytest returns pathlib2 Paths in py<=3.5.  This breaks other parts of the
+    # code that expect a pathlib.Path. See:
+    # https://github.com/pytest-dev/pytest/issues/5017
+    tmp_path = pathlib.Path(str(tmp_path))
 
-    with open(tmp_path / FILENAME, 'w') as file:
+    TEST_FILE = tmp_path / 'numbers.dat'
+    # Run the task in a subdirectory so it doesn't accidentally pick up the file
+    TASK_PATH = tmp_path / 'task'
+
+    with open(str(TEST_FILE), 'w') as file:
         file.write("\n".join([str(num) for num in range(100)]))
 
-    expected_result = add_numbers(tmp_path / FILENAME)
+    expected_result = add_numbers(TEST_FILE)
 
-    task = minkipy.Task(minkipy.command(add_numbers, args=(str(tmp_path / FILENAME),)),
+    task = minkipy.Task(minkipy.command(add_numbers, args=(TEST_FILE.name,)),
                         folder=str(TASK_PATH),
-                        files=[tmp_path / FILENAME])
+                        files=[TEST_FILE])
     assert len(task.files) == 1
-    assert task.files[0].filename == str(FILENAME)
+    assert task.files[0].filename == TEST_FILE.name
     assert task.run() == expected_result
 
     # Now try adding the files manually
     task = minkipy.Task(
-        minkipy.command(add_numbers, args=(str(tmp_path / FILENAME),)),
+        minkipy.command(add_numbers, args=(TEST_FILE.name,)),
         folder=str(TASK_PATH),
     )
-    task.add_files(tmp_path / FILENAME)
+    task.add_files(TEST_FILE)
     assert len(task.files) == 1
-    assert task.files[0].filename == str(FILENAME)
+    assert task.files[0].filename == TEST_FILE.name
     assert task.run() == expected_result

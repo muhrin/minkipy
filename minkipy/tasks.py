@@ -6,7 +6,7 @@ except ImportError:
 import logging
 import os
 import uuid
-from pathlib import Path
+import pathlib
 import sys
 from typing import List, Sequence
 
@@ -53,7 +53,7 @@ class Task(mincepy.SimpleSavable):
     def __init__(self,
                  cmd: commands.Command,
                  folder: str,
-                 files: List[Path] = (),
+                 files: List[pathlib.Path] = (),
                  historian: mincepy.Historian = None):
         """Create a new task
 
@@ -139,8 +139,8 @@ class Task(mincepy.SimpleSavable):
         else:
             self._pyos_path = str(new_path)
 
-    def add_files(self, filename: [str, Path]):
-        filename = Path(filename)
+    def add_files(self, filename: [str, pathlib.Path]):
+        filename = pathlib.Path(filename)
         file = self._historian.create_file(filename.name)
         file.from_disk(filename)
         self._files.append(file)
@@ -223,7 +223,7 @@ class Task(mincepy.SimpleSavable):
             return
 
         root_logger = logging.getLogger()  # Get the top level logger
-        with self.log_file.open('a') as file:
+        with self.log_file.open(mode='a') as file:
             root_logger.setLevel(self.log_level)
             handler = logging.StreamHandler(file)
 
@@ -251,7 +251,7 @@ class Task(mincepy.SimpleSavable):
     @contextmanager
     def _capture_stds(self):
         """Capture standard out and err"""
-        with self._stdout.open('a') as stdout, self._stderr.open('a') as stderr:
+        with self._stdout.open(mode='a') as stdout, self._stderr.open(mode='a') as stderr:
             out = utils.TextMultiplexer(sys.stdout, stdout)
             err = utils.TextMultiplexer(sys.stderr, stderr)
             with redirect_stdout(out), redirect_stderr(err):
