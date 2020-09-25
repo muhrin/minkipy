@@ -21,7 +21,7 @@ class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
         self._args = mincepy.RefList(args)
 
     @property
-    def args(self) -> Sequence:
+    def args(self) -> tuple:
         return self._args
 
     @abstractmethod
@@ -128,6 +128,10 @@ class PythonCommand(Command):
     def fn_name(self) -> str:
         """The name of the function that will be run in the script"""
         return self._function
+
+    @property
+    def kwargs(self) -> dict:
+        return self._kwargs
 
     def run(self) -> Optional[List]:
         """Run this python command"""

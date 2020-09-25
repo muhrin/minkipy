@@ -207,10 +207,12 @@ def test_task_parameters():
     """Make sure that the task() helper create the task correctly"""
     task = minkipy.task(my_task,
                         args=(1, 2, 3),
+                        kwargs=dict(kword='this'),
                         dynamic=True,
                         folder='some_folder',
                         files=(__file__,))
     assert isinstance(task.cmd, minkipy.PythonCommand)
     assert task.cmd.dynamic is True
+    assert task.cmd.kwargs == dict(kword='this')
     assert task.folder == 'some_folder'
     assert task.files[0].filename == os.path.basename(__file__)
