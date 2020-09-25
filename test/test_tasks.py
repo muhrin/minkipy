@@ -213,6 +213,8 @@ def test_task_parameters():
                         files=(__file__,))
     assert isinstance(task.cmd, minkipy.PythonCommand)
     assert task.cmd.dynamic is True
+    # Because we are using dynamic, the first argument is changed to describe the script to run
+    assert tuple(task.cmd.args[1:]) == (1, 2, 3)
     assert task.cmd.kwargs == dict(kword='this')
     assert task.folder == 'some_folder'
     assert task.files[0].filename == os.path.basename(__file__)
