@@ -132,12 +132,20 @@ class PythonCommand(Command):
     def kwargs(self) -> Mapping:
         return self._kwargs
 
+    def load_instance_state(self, saved_state, loader: 'mincepy.Loader'):
+        super(PythonCommand, self).load_instance_state(saved_state, loader)
+        # Deal with new attributes that were added (in case we load an old record)
+        self._kwargs = self._kwargs or {}
+        if self._dynamic is None:
+            self._dynamic = False
+
     def run(self) -> Optional[List]:
         """Run this python command"""
         with self._script_file.open() as file:
             script = utils.load_script(file)
             run = utils.get_symbol(script, self._function)
-            return run(*self._args, **self._kwargs)
+            kwargs = self._kwargs or {}
+            return run(*self._args, **kwargs)
 
     def copy_files_to(self, path):
         self._script_file.to_disk(path)
