@@ -53,7 +53,7 @@ class Task(mincepy.SimpleSavable):
     def __init__(self,
                  cmd: commands.Command,
                  folder: str,
-                 files: List[Path] = None,
+                 files: List[Path] = (),
                  historian: mincepy.Historian = None):
         """Create a new task
 
@@ -71,9 +71,8 @@ class Task(mincepy.SimpleSavable):
         self._cmd = cmd
         self.folder = folder  # The name of the folder where the task will be run
         self._files = mincepy.builtins.RefList()
-        if files:
-            for file in files:
-                self.add_files(file)
+        for file in files:
+            self.add_files(file)
         self._state = CREATED
         self.error = ''
         self.queue = ''  # Set the the name of the queue it's in if it gets put in one

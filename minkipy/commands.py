@@ -31,10 +31,30 @@ class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
         """Copy any command files to the given path"""
 
 
-def command(cmd, args: Sequence = (), type: str = 'python-function') -> Command:  # pylint: disable=redefined-builtin
-    """Create a new command"""
+def command(cmd, args: Sequence = (), type: str = 'python-function', **kwargs) -> Command:  # pylint: disable=redefined-builtin
+    """Command creation factory.
+
+    :param cmd: the command specification, for python function this should be a function or class
+        method
+    :param args: the (positional) argument for the command
+    :param type: the command type, default is 'python-function'
+    :param kwargs: additional arguments that will be passed as kwargs to the relevant command class
+        constructor
+    """
     if type == 'python-function':
-        function = 'run'
+        return PythonCommand.build(cmd, args, **kwargs)
+
+    raise ValueError("Unknown command type '{}'".format(type))
+
+
+class PythonCommand(Command):
+    TYPE_ID = uuid.UUID('61736206-729b-4a0b-9fac-6b5e71123ba0')
+    ATTRS = ('_script_file', '_function', '_kwargs')
+
+    @classmethod
+    def build(cls, cmd, args: Sequence = (), **kwargs):
+        function = 'run'  # The default function name
+
         if inspect.ismethod(cmd):
             script_file = sys.modules[cmd.__module__].__file__
             function = utils.get_symbol_name(cmd)
@@ -52,16 +72,9 @@ def command(cmd, args: Sequence = (), type: str = 'python-function') -> Command:
         else:
             raise ValueError("Unknown python function command '{}".format(cmd))
 
-        return PythonCommand(script_file, function, args)
+        return PythonCommand(script_file, function, args, **kwargs)
 
-    raise ValueError("Unknown command type '{}'".format(type))
-
-
-class PythonCommand(Command):
-    TYPE_ID = uuid.UUID('61736206-729b-4a0b-9fac-6b5e71123ba0')
-    ATTRS = ('_script_file', '_function')
-
-    def __init__(self, script_file, function='run', args=(), historian=None):
+    def __init__(self, script_file, function='run', args=(), kwargs=None, historian=None):
         super(PythonCommand, self).__init__(args)
         self._historian = historian or mincepy.get_historian()
 
@@ -70,6 +83,7 @@ class PythonCommand(Command):
         self._script_file.from_disk(script_file)
 
         self._function = function
+        self._kwargs = kwargs or {}
 
     def __str__(self):
         return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
@@ -89,7 +103,7 @@ class PythonCommand(Command):
         with self._script_file.open() as file:
             script = utils.load_script(file)
             run = utils.get_symbol(script, self._function)
-            return run(*self._args)
+            return run(*self._args, **self._kwargs)
 
     def copy_files_to(self, path):
         self._script_file.to_disk(path)
