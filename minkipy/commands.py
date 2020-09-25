@@ -6,6 +6,7 @@ from typing import List, Optional, Sequence
 import uuid
 
 import mincepy
+from . import pyshim
 from . import utils
 
 __all__ = 'Command', 'command', 'PythonCommand'
@@ -39,7 +40,7 @@ def command(cmd, args: Sequence = (), type: str = 'python-function', **kwargs) -
     :param args: the (positional) argument for the command
     :param type: the command type, default is 'python-function'
     :param kwargs: additional arguments that will be passed as kwargs to the relevant command class
-        constructor
+        constructor so have a look at it's constructor for more details
     """
     if type == 'python-function':
         return PythonCommand.build(cmd, args, **kwargs)
@@ -52,7 +53,7 @@ class PythonCommand(Command):
     ATTRS = ('_script_file', '_function', '_kwargs')
 
     @classmethod
-    def build(cls, cmd, args: Sequence = (), **kwargs):
+    def build(cls, cmd, args: Sequence = (), dynamic=False, **kwargs):
         function = 'run'  # The default function name
 
         if inspect.ismethod(cmd):
@@ -72,10 +73,35 @@ class PythonCommand(Command):
         else:
             raise ValueError("Unknown python function command '{}".format(cmd))
 
-        return PythonCommand(script_file, function, args, **kwargs)
+        return PythonCommand(script_file, function, args, dynamic=dynamic, **kwargs)
 
-    def __init__(self, script_file, function='run', args=(), kwargs=None, historian=None):
-        super(PythonCommand, self).__init__(args)
+    # pylint: disable=too-many-arguments
+    def __init__(self,
+                 script_file,
+                 function='run',
+                 args=(),
+                 kwargs: dict = None,
+                 dynamic=False,
+                 historian=None):
+        """
+        Create a python command
+
+        :param script_file: the path to the script file
+        :param function: the name of the function in the script file to invoke
+        :param args: the arguments to the function
+        :param kwargs: the keyword arguments to the function
+        :param dynamic: whether to run the function dynamically
+            (i.e. import it when the command is ran)
+        :param historian: the historian
+        """
+        if dynamic:
+            # Create the arguments for run_dynamically
+            kwargs = dict(script_file=script_file, function=function, args=args, kwargs=kwargs)
+            args = ()  # Just rely on the kwargs
+            script_file = pyshim.__file__
+            function = pyshim.run_dynamically.__name__
+
+        super().__init__(args)
         self._historian = historian or mincepy.get_historian()
 
         script_file = Path(script_file)
