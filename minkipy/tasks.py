@@ -142,7 +142,7 @@ class Task(mincepy.SimpleSavable):
     def add_files(self, filename: [str, Path]):
         filename = Path(filename)
         file = self._historian.create_file(filename.name)
-        file.from_disk(file)
+        file.from_disk(filename)
         self._files.append(file)
 
     def run(self):

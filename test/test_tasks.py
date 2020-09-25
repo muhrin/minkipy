@@ -9,7 +9,7 @@ import pytest
 
 import minkipy
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, invalid-name
 
 
 def test_load_script():
@@ -161,3 +161,36 @@ def test_task_resubmit(tmp_path, test_project, test_queue):
     assert not task.error
     with minkipy.queue('priority').next_task(timeout=2.) as incoming:
         incoming.run()
+
+
+def add_numbers(filename: str):
+    with open(filename, 'r') as file:
+        numbers = [int(line.rstrip()) for line in file.readlines()]
+    return sum(numbers)
+
+
+def test_task_files(tmp_path, test_project):
+    FILENAME = Path('numbers.dat')
+    TASK_PATH = tmp_path / 'task'  # where to run the task itself
+
+    with open(tmp_path / FILENAME, 'w') as file:
+        file.write("\n".join([str(num) for num in range(100)]))
+
+    expected_result = add_numbers(tmp_path / FILENAME)
+
+    task = minkipy.Task(minkipy.command(add_numbers, args=(str(tmp_path / FILENAME),)),
+                        folder=str(TASK_PATH),
+                        files=[tmp_path / FILENAME])
+    assert len(task.files) == 1
+    assert task.files[0].filename == str(FILENAME)
+    assert task.run() == expected_result
+
+    # Now try adding the files manually
+    task = minkipy.Task(
+        minkipy.command(add_numbers, args=(str(tmp_path / FILENAME),)),
+        folder=str(TASK_PATH),
+    )
+    task.add_files(tmp_path / FILENAME)
+    assert len(task.files) == 1
+    assert task.files[0].filename == str(FILENAME)
+    assert task.run() == expected_result
