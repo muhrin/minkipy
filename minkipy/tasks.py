@@ -258,9 +258,22 @@ class Task(mincepy.SimpleSavable):
                 yield
 
 
-def task(cmd, args=(), folder: str = ''):
-    """Create a task"""
-    return Task(commands.command(cmd, args), folder)
+def task(
+        cmd,
+        args=(),
+        folder: str = '',
+        files=(),
+        dynamic=False,
+):
+    """Create a task
+
+    :param cmd: the command for the task to excute
+    :param args: the argument to the command
+    :param folder: the path where the task should run (can be absolute or relative)
+    :param files: an optional list of files for the task to copy
+    :param dynamic: a flag to make the command dynamic, not all commands types support this
+    """
+    return Task(commands.command(cmd, args, dynamic=dynamic), folder, files=files)
 
 
 HISTORIAN_TYPES = (Task,)

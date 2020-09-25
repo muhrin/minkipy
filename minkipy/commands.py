@@ -50,7 +50,7 @@ def command(cmd, args: Sequence = (), type: str = 'python-function', **kwargs) -
 
 class PythonCommand(Command):
     TYPE_ID = uuid.UUID('61736206-729b-4a0b-9fac-6b5e71123ba0')
-    ATTRS = ('_script_file', '_function', '_kwargs')
+    ATTRS = ('_script_file', '_function', '_kwargs', '_dynamic')
 
     @classmethod
     def build(cls, cmd, args: Sequence = (), dynamic=False, **kwargs):
@@ -108,11 +108,16 @@ class PythonCommand(Command):
         self._script_file = self._historian.create_file(script_file.name, 'utf-8')
         self._script_file.from_disk(script_file)
 
+        self._dynamic = dynamic
         self._function = function
         self._kwargs = kwargs or {}
 
     def __str__(self):
         return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
+
+    @property
+    def dynamic(self) -> bool:
+        return self._dynamic
 
     @property
     def script_file(self):
