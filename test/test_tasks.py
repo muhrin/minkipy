@@ -1,3 +1,4 @@
+import gc
 import io
 import logging
 import os
@@ -203,7 +204,7 @@ def test_task_files(tmp_path, test_project):
     assert task.run() == expected_result
 
 
-def test_task_parameters():
+def test_task_parameters(test_project):
     """Make sure that the task() helper create the task correctly"""
     task = minkipy.task(my_task,
                         args=(1, 2, 3),
@@ -211,6 +212,21 @@ def test_task_parameters():
                         dynamic=True,
                         folder='some_folder',
                         files=(__file__,))
+    assert isinstance(task.cmd, minkipy.PythonCommand)
+    assert task.cmd.dynamic is True
+    # Because we are using dynamic, the first argument is changed to describe the script to run
+    assert tuple(task.cmd.args[1:]) == (1, 2, 3)
+    assert task.cmd.kwargs == dict(kword='this')
+    assert task.folder == 'some_folder'
+    assert task.files[0].filename == os.path.basename(__file__)
+
+    # Now make sure we can save the task with all parameters
+    task_id = task.save()
+    del task
+    gc.collect()
+
+    # Load and check
+    task = mincepy.load(task_id)
     assert isinstance(task.cmd, minkipy.PythonCommand)
     assert task.cmd.dynamic is True
     # Because we are using dynamic, the first argument is changed to describe the script to run

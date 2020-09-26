@@ -2,6 +2,9 @@
 task is ran as opposed to having the function statically stored in the task.
 
 This is useful when you want new tasks to pick up any code changes you make after you submit them
+
+DEV WARNING: Do no change the location, signature or name of run_dynamically as it may break things
+for users that have saved tasks (with the current signature)
 """
 
 from minkipy import utils

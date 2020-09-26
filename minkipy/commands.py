@@ -96,7 +96,8 @@ class PythonCommand(Command):
         """
         if dynamic:
             # Create the arguments for run_dynamically
-            args = ((script_file, function),) + args
+            # note: we have to use a list as tuples can't be referenced
+            args = ([script_file, function],) + args
             script_file = pyshim.__file__
             function = pyshim.run_dynamically.__name__
 
