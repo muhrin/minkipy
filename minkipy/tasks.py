@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 try:
     from contextlib import nullcontext
@@ -45,10 +46,12 @@ class Task(mincepy.SimpleSavable):
     """A minkiPy task.  This represents a unit of work that can be submitted to a queue."""
 
     # pylint: disable=too-many-instance-attributes
-
     TYPE_ID = uuid.UUID('bc48616e-4fcb-41b2-bd03-a37a8fe1dce7')
-    ATTRS = ('_cmd', 'folder', '_files', '_state', 'error', 'queue', 'log_level', '_log_file',
-             '_stdout', '_stderr', '_pyos_path')
+
+    folder = mincepy.field()
+    error = mincepy.field()
+    queue = mincepy.field()
+    log_level = mincepy.field()
 
     def __init__(self,
                  cmd: commands.Command,
@@ -88,12 +91,12 @@ class Task(mincepy.SimpleSavable):
 
     def __str__(self) -> str:
         str_list = []
-        str_list.append("state={}".format(self._state))
+        str_list.append('state={}'.format(self._state))
         if self.error:
-            str_list.append("[{}]".format(self.error))
-        return " ".join(str_list)
+            str_list.append('[{}]'.format(self.error))
+        return ' '.join(str_list)
 
-    @property
+    @mincepy.field('_state')
     def state(self):
         return self._state
 
@@ -102,33 +105,37 @@ class Task(mincepy.SimpleSavable):
         self._state = value
         self.save()
 
-    @property
-    def cmd(self):
+    @mincepy.field('_cmd')
+    def cmd(self) -> minkipy.Command:
         return self._cmd
 
-    @property
-    def files(self) -> Sequence[mincepy.builtins.BaseFile]:
+    @mincepy.field('_files')
+    def files(self) -> Sequence[mincepy.builtins.File]:
         return self._files
 
-    @property
-    def log_file(self) -> mincepy.builtins.BaseFile:
+    @mincepy.field('_log_file')
+    def log_file(self) -> mincepy.builtins.File:
         """Get the log file"""
         return self._log_file
 
-    @property
-    def stdout(self) -> mincepy.builtins.BaseFile:
+    @mincepy.field('_stdout')
+    def stdout(self) -> mincepy.builtins.File:
         """Get the standard out file"""
         return self._stdout
 
-    @property
-    def stderr(self) -> mincepy.builtins.BaseFile:
+    @mincepy.field('_stderr')
+    def stderr(self) -> mincepy.builtins.File:
         """Get the standard err file"""
         return self._stderr
 
-    @property
+    @mincepy.field('_pyos_path')
     def pyos_path(self):
         if self._pyos_path is None:
             return None
+
+        if pyos is None:
+            # Fallback if we have no pyos: just return the string
+            return self._pyos_path
 
         return pyos.pathlib.PurePath(self._pyos_path)
 
@@ -147,12 +154,12 @@ class Task(mincepy.SimpleSavable):
 
     def run(self):
         with self._capture_log(), self._capture_stds():
-            logger.info("Starting task with id %s", self.obj_id)
+            logger.info('Starting task with id %s', self.obj_id)
             if pyos and self.pyos_path is not None:
                 path_context = pyos.pathlib.working_path(self.pyos_path)
                 logger.debug("Running in pyos path '%s'", self.pyos_path)
             else:
-                logger.debug("Running without pyos")
+                logger.debug('Running without pyos')
                 path_context = nullcontext()
 
             with path_context:
@@ -210,7 +217,7 @@ class Task(mincepy.SimpleSavable):
         """Copy the task files to the given folder.  The folder must exist already."""
         # For ease of debugging write any command file (e.g. the script file) as well
         # do this first just in case any of the files have a file with the same name
-        self.cmd.copy_files_to(folder)
+        self._cmd.copy_files_to(folder)
         for file in self._files:
             file.to_disk(folder)
 
@@ -223,7 +230,7 @@ class Task(mincepy.SimpleSavable):
             return
 
         root_logger = logging.getLogger()  # Get the top level logger
-        with self.log_file.open(mode='a') as file:
+        with self._log_file.open(mode='a') as file:
             root_logger.setLevel(self.log_level)
             handler = logging.StreamHandler(file)
 

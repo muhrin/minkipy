@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-__author__ = "Martin Uhrin"
-__license__ = "GPLv3 and MIT, see LICENSE file"
+__author__ = 'Martin Uhrin'
+__license__ = 'GPLv3 and MIT, see LICENSE file'
 
 about = {}
 with open('minkipy/version.py') as f:
@@ -10,7 +10,7 @@ with open('minkipy/version.py') as f:
 
 setup(name='minkipy',
       version=about['__version__'],
-      description="Job and workflow submission made simple",
+      description='Job and workflow submission made simple',
       long_description=open('README.rst').read(),
       url='https://github.com/muhrin/minkipy.git',
       author='Martin Uhrin',
@@ -28,7 +28,7 @@ setup(name='minkipy',
       install_requires=[
           'beautifultable~=1.0.0',
           'click',
-          'mincepy[gui]>=0.12, <0.16',
+          'mincepy>=0.15.14, <0.16',
           'kiwipy[rmq]~=0.6',
       ],
       extras_require={

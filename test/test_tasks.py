@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import gc
 import io
 import logging
@@ -43,7 +44,7 @@ def test_create_task(tmp_path, test_project):
         assert task.run() == 5
         assert task.state == minkipy.DONE
 
-        task2 = minkipy.task("{}@my_task".format(__file__), [10])
+        task2 = minkipy.task('{}@my_task'.format(__file__), [10])
         assert task2.run() == 10
         assert task.state == minkipy.DONE
 
@@ -124,7 +125,7 @@ def exceptional_task(msg):
 
 
 def test_task_exception(tmp_path, test_project):
-    msg = "all was going well except then the exceptional task excepted"
+    msg = 'all was going well except then the exceptional task excepted'
     task = minkipy.task(exceptional_task, args=(msg,))
 
     with pytest.raises(RuntimeError):
@@ -137,6 +138,8 @@ def test_task_resubmit(tmp_path, test_project, test_queue):
     task = minkipy.task(exceptional_task, args=[
         'Arrrgg...',
     ])
+    assert task.resubmit() is False
+
     test_queue.submit(task)
 
     with test_queue.next_task(timeout=2.) as incoming:
@@ -182,7 +185,7 @@ def test_task_files(tmp_path, test_project):
     TASK_PATH = tmp_path / 'task'
 
     with open(str(TEST_FILE), 'w') as file:
-        file.write("\n".join([str(num) for num in range(100)]))
+        file.write('\n'.join([str(num) for num in range(100)]))
 
     expected_result = add_numbers(TEST_FILE)
 
@@ -213,6 +216,7 @@ def test_task_parameters(test_project):
                         folder='some_folder',
                         files=(__file__,))
     assert isinstance(task.cmd, minkipy.PythonCommand)
+    assert task.pyos_path is None
     assert task.cmd.dynamic is True
     # Because we are using dynamic, the first argument is changed to describe the script to run
     assert tuple(task.cmd.args[1:]) == (1, 2, 3)

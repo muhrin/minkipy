@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 import inspect
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import List, Optional, Sequence, Mapping
 import uuid
 
 import mincepy
+
 from . import pyshim
 from . import utils
 
@@ -14,13 +16,12 @@ __all__ = 'Command', 'command', 'PythonCommand'
 
 class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
     TYPE_ID = uuid.UUID('38dc3093-058f-4934-9a48-292eeef35e11')
-    ATTRS = ('_args',)
 
     def __init__(self, args: Sequence):
         super().__init__()
         self._args = mincepy.RefList(args)
 
-    @property
+    @mincepy.field('_args')
     def args(self) -> tuple:
         return self._args
 
@@ -113,7 +114,7 @@ class PythonCommand(Command):
         self._kwargs = mincepy.RefDict(kwargs or {})
 
     def __str__(self):
-        return "{}@{}{}".format(self._script_file.filename, self._function, self._args)
+        return '{}@{}{}'.format(self._script_file.filename, self._function, self._args)
 
     @property
     def dynamic(self) -> bool:
