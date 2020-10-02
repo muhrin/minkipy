@@ -28,7 +28,7 @@ setup(name='minkipy',
       install_requires=[
           'beautifultable~=1.0.0',
           'click',
-          'mincepy>=0.15.14, <0.16',
+          'mincepy>=0.15.15, <0.16',
           'kiwipy[rmq]~=0.6',
       ],
       extras_require={

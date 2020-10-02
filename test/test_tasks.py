@@ -216,7 +216,6 @@ def test_task_parameters(test_project):
                         folder='some_folder',
                         files=(__file__,))
     assert isinstance(task.cmd, minkipy.PythonCommand)
-    assert task.pyos_path is None
     assert task.cmd.dynamic is True
     # Because we are using dynamic, the first argument is changed to describe the script to run
     assert tuple(task.cmd.args[1:]) == (1, 2, 3)
