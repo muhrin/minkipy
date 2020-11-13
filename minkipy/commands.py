@@ -51,7 +51,6 @@ def command(cmd, args: Sequence = (), type: str = 'python-function', **kwargs) -
 
 class PythonCommand(Command):
     TYPE_ID = uuid.UUID('61736206-729b-4a0b-9fac-6b5e71123ba0')
-    ATTRS = ('_script_file', '_function', '_kwargs', '_dynamic')
 
     @classmethod
     def build(cls, cmd, args: Sequence = (), dynamic=False, kwargs: dict = None, **rest):
@@ -116,26 +115,26 @@ class PythonCommand(Command):
     def __str__(self):
         return '{}@{}{}'.format(self._script_file.filename, self._function, self._args)
 
-    @property
+    @mincepy.field('_dynamic')
     def dynamic(self) -> bool:
         return self._dynamic
 
-    @property
+    @mincepy.field('_script_file')
     def script_file(self):
         """Access the python script file"""
         return self._script_file
 
-    @property
+    @mincepy.field('_function')
     def fn_name(self) -> str:
         """The name of the function that will be run in the script"""
         return self._function
 
-    @property
+    @mincepy.field('_kwargs')
     def kwargs(self) -> Mapping:
         return self._kwargs
 
     def load_instance_state(self, saved_state, loader: 'mincepy.Loader'):
-        super(PythonCommand, self).load_instance_state(saved_state, loader)
+        super().load_instance_state(saved_state, loader)
         # Deal with new attributes that were added (in case we load an old record)
         self._kwargs = self._kwargs or {}
         if self._dynamic is None:

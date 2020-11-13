@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import json
 import os
-from pathlib import Path
+import pathlib
 from typing import Optional
 
 import click
@@ -28,7 +29,8 @@ def set_communicator(communicator: kiwipy.Communicator):
     _communicator = communicator
 
 
-def read_settings():
+def read_settings() -> dict:
+    """Read the current settings dictionary from disk"""
     path = settings_path()
     if not path.exists():
         write_settings(DEFAULT_SETTINGS)
@@ -39,6 +41,7 @@ def read_settings():
 
 
 def write_settings(settings: dict):
+    """Write a settings dictionary to the standard settings path"""
     path = settings_path()
     if not path.parent.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -47,9 +50,11 @@ def write_settings(settings: dict):
         json.dump(settings, file, indent=4)
 
 
-def settings_path():
+def settings_path() -> pathlib.Path:
+    """Get the path to the settings file.  This will check the environment variable ENV_MINKIPY_SETTINGS for the
+    settings and if this is not found will fall back to a sensible default."""
     try:
-        return Path(os.environ[ENV_MINKIPY_SETTINGS])
+        return pathlib.Path(os.environ[ENV_MINKIPY_SETTINGS])
     except KeyError:
-        app_dir = Path(click.get_app_dir('minkipy', roaming=False))
+        app_dir = pathlib.Path(click.get_app_dir('minkipy', roaming=False))
         return app_dir / 'settings.json'

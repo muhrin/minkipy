@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import collections
 import contextlib
 import functools
@@ -68,7 +69,12 @@ class Queue:
         return self._name
 
     def empty(self) -> bool:
-        return self._kiwi_queue.next_task(timeout=0, false=False) is None
+        """Returns True if the queue is empty, False otherwise"""
+        try:
+            with self._kiwi_queue.next_task(timeout=0.01, fail=True):
+                return False
+        except kiwipy.QueueEmpty:
+            return True
 
     def list(self, verbosity: int = 1):
         """Pretty-print the list of tasks."""
@@ -128,7 +134,7 @@ class Queue:
                 task_ids.append(self.submit_one(task))
 
         if already_queued:
-            logger.warning("Skipping the following tasks because they are already in the queue: %s",
+            logger.warning('Skipping the following tasks because they are already in the queue: %s',
                            already_queued)
 
         if len(tasks) == 1:
@@ -151,7 +157,7 @@ class Queue:
         return task_id
 
     def remove(self, *task: Union[tasks.Task, Any]) -> list:
-        """Remove a task from the queue.  Can supply the task instance of the object id of the task.
+        """Remove a task from the queue.  Can supply the task instance or the object id of the task.
         Returns a list of the object ids of the removed tasks
         """
         obj_ids = set(map(self._historian.to_obj_id, task))
@@ -212,7 +218,7 @@ def pprint(tasks_list: Iterator[tasks.Task], verbosity: int = 2) -> None:
         return
 
     if not tasks_list:
-        print("Empty")
+        print('Empty')
         return
 
     headers = ['obj_id', 'cmd', 'state', 'error']
@@ -257,12 +263,12 @@ def pprint(tasks_list: Iterator[tasks.Task], verbosity: int = 2) -> None:
             print(line)
 
     if state_counts['total'] == 0:
-        print("Empty")
+        print('Empty')
     else:
         if pyos is not None:
             for path, count in pyos_paths.items():
-                print("Tasks in {}: {}".format(path, count))
-        print(', '.join("{}: {}".format(state, count) for state, count in state_counts.items()))
+                print('Tasks in {}: {}'.format(path, count))
+        print(', '.join('{}: {}'.format(state, count) for state, count in state_counts.items()))
 
 
 def _create_table() -> beautifultable.BeautifulTable:

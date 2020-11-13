@@ -275,7 +275,7 @@ def task(
 ):
     """Create a task
 
-    :param cmd: the command for the task to excute
+    :param cmd: the command for the task to execute
     :param args: the argument to the command
     :param kwargs: the keyword arguments to the command (not all command types support this)
     :param folder: the path where the task should run (can be absolute or relative)

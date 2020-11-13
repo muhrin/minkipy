@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import minkipy
 
 # pylint: disable=unused-argument
@@ -10,6 +11,9 @@ def do_stuff(arg):
 def test_queue_basic(tmp_path, test_project, queue_name):
     with minkipy.utils.working_directory(tmp_path):
         queue = minkipy.queue(queue_name)
+        assert str(queue) == queue_name
+        assert queue.empty()  # Should have nothing in it yet
+
         task = minkipy.task(do_stuff, ['stuff'])
         queue.submit(task)
 
