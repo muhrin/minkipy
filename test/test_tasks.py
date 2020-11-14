@@ -8,11 +8,12 @@ import sys
 from typing import Union
 
 import mincepy
-import pytest
+import pytest  # pylint: disable=wrong-import-order
 
 import minkipy
+from test import script as script_module  # pylint: disable=wrong-import-order
 
-# pylint: disable=unused-argument, invalid-name
+# pylint: disable=unused-argument, invalid-name, no-member
 
 
 def test_load_script():
@@ -22,7 +23,14 @@ def add(a, b):
 """
     script_file = io.StringIO(script)
     module = minkipy.load_script(script_file)
+    assert module.add(5, 6) == 11
 
+    # Test loading by file path
+    module = minkipy.load_script(minkipy.constants.FILE_PREFIX + script_module.__file__)
+    assert module.add(5, 6) == 11
+
+    # Test loading by import
+    module = minkipy.load_script(minkipy.constants.MODULE_PREFIX + script_module.__name__)
     assert module.add(5, 6) == 11
 
 
@@ -193,7 +201,7 @@ def test_task_files(tmp_path, test_project):
                         folder=str(TASK_PATH),
                         files=[TEST_FILE])
     assert len(task.files) == 1
-    assert task.files[0].filename == TEST_FILE.name
+    assert task.files[0].filename == TEST_FILE.name  # pylint: disable=unsubscriptable-object
     assert task.run() == expected_result
 
     # Now try adding the files manually
@@ -203,7 +211,7 @@ def test_task_files(tmp_path, test_project):
     )
     task.add_files(TEST_FILE)
     assert len(task.files) == 1
-    assert task.files[0].filename == TEST_FILE.name
+    assert task.files[0].filename == TEST_FILE.name  # pylint: disable=unsubscriptable-object
     assert task.run() == expected_result
 
 
@@ -217,11 +225,10 @@ def test_task_parameters(test_project):
                         files=(__file__,))
     assert isinstance(task.cmd, minkipy.PythonCommand)
     assert task.cmd.dynamic is True
-    # Because we are using dynamic, the first argument is changed to describe the script to run
-    assert tuple(task.cmd.args[1:]) == (1, 2, 3)
+    assert tuple(task.cmd.args) == (1, 2, 3)
     assert task.cmd.kwargs == dict(kword='this')
     assert task.folder == 'some_folder'
-    assert task.files[0].filename == os.path.basename(__file__)
+    assert task.files[0].filename == os.path.basename(__file__)  # pylint: disable=unsubscriptable-object
 
     # Now make sure we can save the task with all parameters
     task_id = task.save()
@@ -232,8 +239,7 @@ def test_task_parameters(test_project):
     task = mincepy.load(task_id)
     assert isinstance(task.cmd, minkipy.PythonCommand)
     assert task.cmd.dynamic is True
-    # Because we are using dynamic, the first argument is changed to describe the script to run
-    assert tuple(task.cmd.args[1:]) == (1, 2, 3)
+    assert tuple(task.cmd.args) == (1, 2, 3)
     assert task.cmd.kwargs == dict(kword='this')
     assert task.folder == 'some_folder'
-    assert task.files[0].filename == os.path.basename(__file__)
+    assert task.files[0].filename == os.path.basename(__file__)  # pylint: disable=unsubscriptable-object

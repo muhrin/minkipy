@@ -4,7 +4,7 @@ import uuid
 
 import mincepy
 from mincepy import testing
-import pytest
+import pytest  # pylint: disable=wrong-import-order
 
 import minkipy
 
@@ -23,14 +23,26 @@ class Workflow(mincepy.SimpleSavable):
 
 
 def test_python_command_from_method():
+    # Static
     wf = Workflow()
-    command = minkipy.command(wf.add_to_ten, args=(1,))
+    command = minkipy.command(wf.add_to_ten, args=(1,))  # type: minkipy.PythonCommand
+    assert isinstance(command.script_file, mincepy.File)
+    assert command.run() == 11
+
+    # CHANGE:
+    command = minkipy.command(wf.add_to_ten, args=(1,), dynamic=True)  # type: minkipy.PythonCommand
+    assert isinstance(command.script_file, str)
     assert command.run() == 11
 
 
 def test_python_command_from_module():
     from . import script
-    command = minkipy.command(script, args=(3, 254))
+    command = minkipy.command(script, args=(3, 254))  # type: minkipy.PythonCommand
+    assert isinstance(command.script_file, mincepy.File)
+    assert command.run() == 257
+
+    command = minkipy.command(script, args=(3, 254), dynamic=True)  # type: minkipy.PythonCommand
+    assert isinstance(command.script_file, str)
     assert command.run() == 257
 
     # Now try using string instead of the module object
@@ -80,3 +92,22 @@ def test_load_script_from_file():
 def test_invalid_command():
     with pytest.raises(ValueError):
         minkipy.command('bla', type='made up')
+
+
+def test_python_command_types():
+    """Check that the various ways of creating PythonCommands work"""
+    from . import script
+    script_path = script.__file__
+
+    # Non dynamic
+    cmd = minkipy.PythonCommand(script_path, function='add', args=(5, 10))
+    assert isinstance(cmd.script_file, mincepy.File)
+    assert cmd.run() == 15
+
+    # Dynamic
+    cmd = minkipy.PythonCommand(script_path, function='add', args=(5, 10), dynamic=True)
+    assert isinstance(cmd.script_file, str)
+    assert cmd.run() == 15
+
+    with pytest.raises(ValueError):
+        minkipy.PythonCommand.build(5)

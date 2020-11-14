@@ -3,15 +3,17 @@ from abc import ABCMeta, abstractmethod
 import inspect
 from pathlib import Path
 import sys
-from typing import List, Optional, Sequence, Mapping
+from typing import List, Optional, Sequence, Mapping, Union
 import uuid
 
 import mincepy
 
-from . import pyshim
+from . import constants
 from . import utils
 
 __all__ = 'Command', 'command', 'PythonCommand'
+
+MODULE_PREFIX = ':mod:'
 
 
 class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
@@ -33,7 +35,11 @@ class Command(mincepy.SimpleSavable, metaclass=ABCMeta):
         """Copy any command files to the given path"""
 
 
-def command(cmd, args: Sequence = (), type: str = 'python-function', **kwargs) -> Command:  # pylint: disable=redefined-builtin
+def command(
+        cmd,
+        args: Sequence = (),
+        type: str = 'python-function',  # pylint: disable=redefined-builtin
+        **kwargs) -> Command:
     """Command creation factory.
 
     :param cmd: the command specification, for python function this should be a function or class
@@ -57,14 +63,23 @@ class PythonCommand(Command):
         function = 'run'  # The default function name
 
         if inspect.ismethod(cmd):
-            script_file = sys.modules[cmd.__module__].__file__
+            if dynamic:
+                script_file = constants.MODULE_PREFIX + cmd.__module__
+            else:
+                script_file = sys.modules[cmd.__module__].__file__
             function = utils.get_symbol_name(cmd)
             args = (cmd.__self__,) + args
         elif inspect.isfunction(cmd):
-            script_file = sys.modules[cmd.__module__].__file__
+            if dynamic:
+                script_file = constants.MODULE_PREFIX + cmd.__module__
+            else:
+                script_file = sys.modules[cmd.__module__].__file__
             function = cmd.__name__
         elif inspect.ismodule(cmd):
-            script_file = cmd.__file__
+            if dynamic:
+                script_file = constants.MODULE_PREFIX + cmd.__name__
+            else:
+                script_file = cmd.__file__
         elif isinstance(cmd, str) and '@' in cmd:
             script_file, function = cmd.split('@')
             if not script_file.endswith('.py'):
@@ -94,34 +109,36 @@ class PythonCommand(Command):
             (i.e. import it when the command is ran)
         :param historian: the historian
         """
-        if dynamic:
-            # Create the arguments for run_dynamically
-            # note: we have to use a list as tuples can't be referenced
-            args = ([script_file, function],) + args
-            script_file = pyshim.__file__
-            function = pyshim.run_dynamically.__name__
-
         super().__init__(args)
         self._historian = historian or mincepy.get_historian()
 
-        script_file = Path(script_file)
-        self._script_file = self._historian.create_file(script_file.name, 'utf-8')
-        self._script_file.from_disk(script_file)
+        if dynamic:
+            self._script_file = script_file
+        else:
+            # Save the script
+            script_file = Path(script_file)
+            self._script_file = self._historian.create_file(script_file.name, 'utf-8')
+            self._script_file.from_disk(script_file)
 
         self._dynamic = dynamic
         self._function = function
         self._kwargs = mincepy.RefDict(kwargs or {})
 
     def __str__(self):
-        return '{}@{}{}'.format(self._script_file.filename, self._function, self._args)
+        return '{}@{}{}'.format(self._script_file, self._function, self._args)
 
     @mincepy.field('_dynamic')
     def dynamic(self) -> bool:
+        """If True then the task script file will be loaded dynamically and task.script_file will be a string,
+        otherwise the file is stored directly in the task."""
         return self._dynamic
 
     @mincepy.field('_script_file')
-    def script_file(self):
-        """Access the python script file"""
+    def script_file(self) -> Union[mincepy.File, str]:
+        """Access the python script file.
+        This can be either a :class:`mincepy.File` if it is stored directly in the task or a string.
+        If it is a string it will either be the path to the file or a module path specified as
+        ':mod:path.to.module' where 'module' would be imported"""
         return self._script_file
 
     @mincepy.field('_function')
@@ -142,14 +159,15 @@ class PythonCommand(Command):
 
     def run(self) -> Optional[List]:
         """Run this python command"""
-        with self._script_file.open() as file:
-            script = utils.load_script(file)
-            run = utils.get_symbol(script, self._function)
-            kwargs = self._kwargs or {}
-            return run(*self._args, **kwargs)
+        script = utils.load_script(self._script_file)
+        run = utils.get_symbol(script, self._function)
+        kwargs = self._kwargs or {}
+        return run(*self._args, **kwargs)
 
     def copy_files_to(self, path):
-        self._script_file.to_disk(path)
+        # Only copy the task file if it is static
+        if not self.dynamic:
+            self._script_file.to_disk(path)
 
 
 HISTORIAN_TYPES = Command, PythonCommand

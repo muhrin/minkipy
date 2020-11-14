@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import importlib
 import inspect
 import os.path
 import pathlib
@@ -15,10 +17,10 @@ def add(a, b, prefactor=1.):
 
 def test_basics():
     cmd = minkipy.PythonCommand.build(add, args=(5, 10), kwargs=dict(prefactor=2.))
-    assert cmd.fn_name == 'add'
-    assert cmd.script_file.filename == os.path.basename(__file__)
+    assert cmd.fn_name == 'add'  # pylint: disable=comparison-with-callable
+    assert cmd.script_file.filename == os.path.basename(__file__)  # pylint: disable=no-member
     assert cmd.run() == 30
-    assert cmd.run() == 30, "Just making sure we can run multiple times"
+    assert cmd.run() == 30, 'Just making sure we can run multiple times'
 
 
 def mul(a, b, prefactor=1.):
@@ -49,6 +51,7 @@ def test_dynamic():
         source = inspect.getsource(add).replace('add', 'mul')
         with open(MODULE_PATH, 'w') as file:
             file.write(source)
+        importlib.reload(test_module)  # Reload the module to register the change
 
         assert static.run() == 100.
         assert dynamic.run() == 30.

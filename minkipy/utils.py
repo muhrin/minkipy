@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
 import contextlib
+import functools
+import importlib.machinery
 import importlib.util
 import inspect
 import io
@@ -8,14 +11,19 @@ import re
 import shutil
 import time
 import tempfile
+import types
 from typing import Optional, Sequence
+
+import mincepy
+
+from . import constants
 
 __all__ = ('load_script',)
 
 
 def datetime_str() -> str:
     """Get a datetime string that can be used for identifying submissions"""
-    return time.strftime("%Y%m%d-%H%M%S")
+    return time.strftime('%Y%m%d-%H%M%S')
 
 
 def get_script_path(script_name):
@@ -42,25 +50,57 @@ def make_valid_python_name(string):
     return string
 
 
-def load_script(script_file: [str, io.TextIOBase]):
+@functools.singledispatch
+def load_script(script_file: [str, io.TextIOBase]) -> types.ModuleType:
+    """Load a module from the given script file.
+
+    The script file can be an io.TextIOBase in which case it will be saved and loaded directly.
+    If it is a mincepy.File it will be opened and loaded.
+    If it is a string it will be interpreted as follows:
+        * If is starts with :mod:... it will be treated as a module
+        * If it starts with :file:... the file will be loaded as a module
+        * Otherwise the string is treated as a file path as if it were prefixed with :file:
+    """
+    raise TypeError('Unknown script file type: {}'.format(script_file.__class__.__name__))
+
+
+@load_script.register(str)
+def _(script_file: str) -> types.ModuleType:
+    if script_file.startswith(constants.MODULE_PREFIX):
+        mod_name = script_file[len(constants.MODULE_PREFIX):]
+        return importlib.import_module(mod_name)
+
+    if script_file.startswith(constants.FILE_PREFIX):
+        script_file = script_file[len(constants.FILE_PREFIX):]
+
+    # Ok, assume that the string _is_ the script itself
+    spec = importlib.util.spec_from_file_location('script', script_file)
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    return script
+
+
+@load_script.register(io.TextIOBase)
+def _(script_file: io.TextIOBase) -> types.ModuleType:
     temp_file = None
     script_path = None
     try:
-        if isinstance(script_file, io.TextIOBase):
-            with tempfile.NamedTemporaryFile('w', encoding='utf-8', suffix='.py',
-                                             delete=False) as temp_file:
-                shutil.copyfileobj(script_file, temp_file)
-                script_path = temp_file.name
-        else:
-            script_path = script_file
+        # Save to a temporary file
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', suffix='.py',
+                                         delete=False) as temp_file:
+            shutil.copyfileobj(script_file, temp_file)
+            script_path = temp_file.name
 
-        spec = importlib.util.spec_from_file_location("script", script_path)
-        script = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(script)
-        return script
+        return load_script(constants.FILE_PREFIX + script_path)
     finally:
         if temp_file is not None:
             os.remove(script_path)
+
+
+@load_script.register(mincepy.File)
+def _(script_file: mincepy.File) -> types.ModuleType:
+    with script_file.open('r') as file:
+        return load_script(file)
 
 
 def get_symbol(module, name: str):
@@ -86,7 +126,7 @@ def yield_symbol_names(symbol):
 
 
 def get_symbol_name(symbol):
-    return ".".join(yield_symbol_names(symbol))
+    return '.'.join(yield_symbol_names(symbol))
 
 
 @contextlib.contextmanager
