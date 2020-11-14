@@ -153,8 +153,9 @@ class PythonCommand(Command):
     def load_instance_state(self, saved_state, loader: 'mincepy.Loader'):
         super().load_instance_state(saved_state, loader)
         # Deal with new attributes that were added (in case we load an old record)
-        self._kwargs = self._kwargs or {}
-        if self._dynamic is None:
+        if not hasattr(self, '_kwargs'):
+            self._kwargs = {}
+        if not hasattr(self, '_dynamic'):
             self._dynamic = False
 
     def run(self) -> Optional[List]:

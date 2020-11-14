@@ -52,6 +52,7 @@ def test_python_command_from_module():
 
 
 def test_saving_command_args():
+    """Test that saving of arguments is handled correctly"""
     car = testing.Car()
     command = minkipy.command(simple_wf, args=(car,))
 
@@ -111,3 +112,29 @@ def test_python_command_types():
 
     with pytest.raises(ValueError):
         minkipy.PythonCommand.build(5)
+
+
+def test_command_saving_basics():
+    """Test some basics of loading and saving a command"""
+    # Check that older versions without 'dynamic' in their saved state can be loaded
+    historian = mincepy.get_historian(create=False)
+
+    from . import script
+    script_path = script.__file__
+
+    class CustomPythonCommand(minkipy.PythonCommand):
+
+        def save_instance_state(self, saver):
+            state = super().save_instance_state(saver)
+            # Pretend we're an older version and have no kwargs or dynamic
+            state.pop('_dynamic')
+            state.pop('_kwargs')
+
+    cmd = CustomPythonCommand(script_path, function='add', args=(5, 10))
+
+    cmd_id = cmd.save()
+    del cmd
+
+    cmd = historian.load(cmd_id)
+    assert cmd.kwargs == {}
+    assert cmd.dynamic is False
