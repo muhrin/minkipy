@@ -17,6 +17,8 @@ def test_queue_basic(tmp_path, test_project, queue_name):
         task = minkipy.task(do_stuff, ['stuff'])
         queue.submit(task)
 
+        assert not queue.empty()
+
         with queue.next_task(timeout=2.) as fetched:
             assert fetched.run() == 'stuff'
 

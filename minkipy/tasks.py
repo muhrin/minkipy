@@ -202,7 +202,7 @@ class Task(mincepy.SimpleSavable):
                 submit_to = queue or self.queue
                 result = minkipy.queue(submit_to).submit(self)
             except Exception:
-                self.sync()  # Reset out state
+                self.sync()  # Reset our state
                 raise
             else:
                 if result is None:

@@ -7,9 +7,7 @@ import inspect
 import io
 import os
 from pathlib import Path
-import re
 import shutil
-import time
 import tempfile
 import types
 from typing import Optional, Sequence
@@ -19,35 +17,6 @@ import mincepy
 from . import constants
 
 __all__ = ('load_script',)
-
-
-def datetime_str() -> str:
-    """Get a datetime string that can be used for identifying submissions"""
-    return time.strftime('%Y%m%d-%H%M%S')
-
-
-def get_script_path(script_name):
-    script_path = Path(os.path.abspath(os.path.dirname(__file__))) / script_name
-    assert os.path.exists(script_name)
-    return script_path
-
-
-def make_valid_python_name(string):
-    """Convert a filename into a valid python variable name
-    Parts borrowed from:
-    https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
-    """
-    string = Path(string).stem  # Remove extension
-    string = string.replace('.', '_')
-    string = string.replace('-', '_')
-
-    # Remove invalid characters
-    string = re.sub('[^0-9a-zA-Z_]', '', string)
-
-    # Remove leading characters until we find a letter or underscore
-    string = re.sub('^[^a-zA-Z_]+', '', string)
-
-    return string
 
 
 @functools.singledispatch

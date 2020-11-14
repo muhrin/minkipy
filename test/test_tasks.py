@@ -33,6 +33,9 @@ def add(a, b):
     module = minkipy.load_script(minkipy.constants.MODULE_PREFIX + script_module.__name__)
     assert module.add(5, 6) == 11
 
+    with pytest.raises(TypeError):
+        minkipy.load_script(5)
+
 
 def writing_task(path, msg: str):
     """A simple task that writes a message to a file"""
