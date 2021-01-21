@@ -29,7 +29,7 @@ setup(name='minkipy',
           'beautifultable~=1.0.0',
           'click',
           'mincepy>=0.15.15, <0.16',
-          'kiwipy[rmq]~=0.6',
+          'kiwipy[rmq]>=0.6, <0.8',
       ],
       extras_require={
           'dev': [
