@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import minkipy
 from minkipy.cli import main
 
@@ -27,6 +28,7 @@ def test_list_default(cli_runner):
     assert str(task_id) in result.output
     assert common.dummy.__name__ in result.output
     assert str('hello') in result.output
+    assert minkipy.settings_path() in result.output
 
 
 def test_multiqueue_list(cli_runner, test_queue):
@@ -54,13 +56,13 @@ def test_list_count(cli_runner, test_queue):
 
     result = cli_runner.invoke(main.list, ['-c', test_queue.name])
     assert result.exit_code == 0
-    assert "total: 2" in result.output
-    assert "Empty" not in result.output
+    assert 'total: 2' in result.output
+    assert 'Empty' not in result.output
     assert str(task1_id) not in result.output
 
     test_queue.purge()
     result = cli_runner.invoke(main.list, ['-c', test_queue.name])
     assert result.exit_code == 0
-    assert "total" not in result.output
-    assert "Empty" in result.output
+    assert 'total' not in result.output
+    assert 'Empty' in result.output
     assert str(task1_id) not in result.output

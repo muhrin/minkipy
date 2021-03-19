@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pprint
 
 import click
@@ -29,7 +30,8 @@ def list():  # pylint: disable=redefined-builtin
         if project.uuid == active.uuid:
             line.append('[active]')
 
-        click.echo(" ".join(line))
+        click.echo(' '.join(line))
+    click.echo(f'Settings path: {minkipy.settings_path()}')
 
 
 @project_.command()
@@ -41,10 +43,10 @@ def show(project):
     else:
         proj = minkipy.get_projects().get(project, None)
 
-    click.echo("{}:".format(proj.name))
+    click.echo('{}:'.format(proj.name))
 
     if proj is None:
-        click.echo("Project not found")
+        click.echo('Project not found')
         return 1
 
     click.echo(pretty.pformat(proj.to_dict()))
