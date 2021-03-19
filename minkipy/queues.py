@@ -107,8 +107,14 @@ class Queue:
                 else:
                     outcome.set_result(True)
 
-    def submit(self, *tasks: 'minkipy.Task'):  # pylint: disable=redefined-outer-name
-        """Submit one or more tasks to the queue.  The task ids will be returned."""
+    def submit(self, *tasks: 'minkipy.Task', skip_duplicate_check=False) -> Union[Any, Sequence]:  # pylint: disable=redefined-outer-name
+        """Submit one or more tasks to the queue.  The task ids will be returned.
+
+        :param tasks: one of more tasks to submit
+        :param skip_duplicate_check: if True, we will forgo checking the queue for duplicate tasks (based on the mincePy
+            object id).  Checking for duplicates incurs a significant performance overhead and so if you're sure
+            that you don't have these tasks in the queue already (or don't care) then set this to True.
+        """
         task_ids = []
 
         # First check if any of the passed tasks are already in queues in which case we have to
@@ -124,14 +130,18 @@ class Queue:
             queue(name).remove(*queued_task)
 
         # Get the ids of the current tasks
-        current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}
         already_queued = []
-        for task in tasks:
-            task.save()
-            if task.obj_id in current_ids:
-                already_queued.append(task.obj_id)
-            else:
+        if skip_duplicate_check:
+            for task in tasks:
                 task_ids.append(self.submit_one(task))
+        else:
+            current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}
+            for task in tasks:
+                task.save()
+                if task.obj_id in current_ids:
+                    already_queued.append(task.obj_id)
+                else:
+                    task_ids.append(self.submit_one(task))
 
         if already_queued:
             logger.warning('Skipping the following tasks because they are already in the queue: %s',

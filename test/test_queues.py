@@ -52,6 +52,9 @@ def test_double_submission(test_project, test_queue: minkipy.Queue):
     # Should be skipped
     assert not test_queue.submit(task)
 
+    # Now try disabling duplicate check
+    assert test_queue.submit(task, skip_duplicate_check=True) == task.obj_id
+
 
 def test_remove(test_project, test_queue: minkipy.Queue):
     task = minkipy.task(do_stuff, [None])
