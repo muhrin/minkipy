@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Extensions to mincePy and the mincePy GUI"""
 from typing import Optional, Iterable
 
@@ -29,17 +30,26 @@ except ImportError:
 else:
 
     class MinkipyActioner(mincepy_gui.Actioner):
-        name = "minkipy-actioner"
+        name = 'minkipy-actioner'
 
         SUBMIT = 'Submit'
 
-        def probe(self, obj: object, context: dict) -> Optional[Iterable[str]]:
+        def probe(
+                # pylint: disable=unused-argument
+                self,
+                obj: object,
+                context: dict) -> Optional[Iterable[str]]:
             if self.is_task_or_task_record(obj) or self.is_collection_of_tasks(obj):
                 return [self.SUBMIT]
 
             return None
 
-        def do(self, action: str, obj: object, context: dict):
+        def do(
+                # pylint: disable=unused-argument, invalid-name
+                self,
+                action: str,
+                obj: object,
+                context: dict):
             to_submit = []
 
             def append(item):
@@ -61,8 +71,8 @@ else:
                 parent = context[mincepy_gui.ActionContext.PARENT]
                 queue_name, ok = QtWidgets.QInputDialog().getText(  # pylint: disable=invalid-name
                     parent,
-                    "Submit task(s)",  # Title
-                    "Queue name:",  # Label
+                    'Submit task(s)',  # Title
+                    'Queue name:',  # Label
                     echo=QtWidgets.QLineEdit.Normal,
                     text=queue_name)
 
@@ -70,8 +80,8 @@ else:
                     if queue_name:
                         queues.queue(queue_name).submit(*to_submit)  # Submit the tasks
                     else:
-                        QtWidgets.QMessageBox.warning(parent, "Submit cancelled",
-                                                      "Must supply queue name")
+                        QtWidgets.QMessageBox.warning(parent, 'Submit cancelled',
+                                                      'Must supply queue name')
 
         @staticmethod
         def is_task(obj: object) -> bool:
