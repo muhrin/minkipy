@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from typing import Optional
 import uuid
 
@@ -22,7 +23,7 @@ PROJECTS_KEY = 'projects'
 
 
 def _make_default_queue_name(project_name) -> str:
-    return "{}-default-queue".format(project_name)
+    return '{}-default-queue'.format(project_name)
 
 
 class Project:

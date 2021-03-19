@@ -28,7 +28,6 @@ def test_list_default(cli_runner):
     assert str(task_id) in result.output
     assert common.dummy.__name__ in result.output
     assert str('hello') in result.output
-    assert minkipy.settings_path() in result.output
 
 
 def test_multiqueue_list(cli_runner, test_queue):
