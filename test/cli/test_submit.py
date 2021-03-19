@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import click.testing
 
 import minkipy
@@ -11,7 +12,7 @@ def submit_simple(cli_runner: click.testing.CliRunner):
     assert queue.size() == 0
 
     result = cli_runner.invoke(main.submit,
-                               ["{}@{}".format(common.__file__, common.simple.__name__)])
+                               ['{}@{}'.format(common.__file__, common.simple.__name__)])
     assert result.exit_code == 0
 
     queue = minkipy.queue()

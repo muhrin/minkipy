@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 # Test pyos related functionality
 
 import pytest
 
 # Skip these tests if pyos is not installed
-pyos = pytest.importorskip("pyos")  # pylint: disable=invalid-name
-import pyos.pyos
+pyos = pytest.importorskip('pyos')  # pylint: disable=invalid-name, wrong-import-position
 from mincepy.testing import Car
+import pyos.pyos
 
 import minkipy
 
@@ -14,7 +15,7 @@ def car_maker():
     return Car().save()
 
 
-def test_pyos_path_default(tmp_path, test_project):
+def test_pyos_path_default(tmp_path, test_project):  # pylint: disable=unused-argument
     # Create a task from a function in a script
     cwd = pyos.pyos.pwd()
     with minkipy.utils.working_directory(tmp_path):
@@ -24,11 +25,11 @@ def test_pyos_path_default(tmp_path, test_project):
         # Now look for the car
         results = pyos.pyos.ls(car_id)
         assert len(results) == 1
-        assert results[0].obj_id == car_id
+        assert results[0].obj_id == car_id  # pylint: disable=no-member
         assert isinstance(pyos.pyos.load(results[0]), Car)
 
 
-def test_pyos_path_custom(tmp_path, test_project):
+def test_pyos_path_custom(tmp_path, test_project):  # pylint: disable=unused-argument
     # Create a task from a function in a script
     task_path = pyos.Path('work/here/')
     with minkipy.utils.working_directory(tmp_path):
@@ -39,5 +40,5 @@ def test_pyos_path_custom(tmp_path, test_project):
         # Now look for the car
         results = pyos.pyos.ls(task_path / str(car_id))
         assert len(results) == 1
-        assert results[0].obj_id == car_id
+        assert results[0].obj_id == car_id  # pylint: disable=no-member
         assert isinstance(pyos.pyos.load(results[0]), Car)

@@ -16,7 +16,6 @@ try:
 except ImportError:
     pyos = None
 
-import minkipy  # pylint: disable=unused-import
 from . import projects
 from . import settings
 from . import tasks
@@ -107,7 +106,7 @@ class Queue:
                 else:
                     outcome.set_result(True)
 
-    def submit(self, *tasks: 'minkipy.Task', skip_duplicate_check=False) -> Union[Any, Sequence]:  # pylint: disable=redefined-outer-name
+    def submit(self, *tasks: 'tasks.Task', skip_duplicate_check=False) -> Union[Any, Sequence]:  # pylint: disable=redefined-outer-name
         """Submit one or more tasks to the queue.  The task ids will be returned.
 
         :param tasks: one of more tasks to submit

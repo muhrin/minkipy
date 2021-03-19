@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module acts as a shim to call a python command dynamically i.e. import the file when a
 task is ran as opposed to having the function statically stored in the task.
 
@@ -15,8 +16,8 @@ def run_dynamically(_fn_spec: tuple, *args, **kwargs):
     result"""
     script_file, function = _fn_spec
     script = utils.load_script(script_file)
-    print("Got script {}".format(script))
+    print('Got script {}'.format(script))
     run = utils.get_symbol(script, function)
-    print("Got run: {}".format(run))
+    print('Got run: {}'.format(run))
     kwargs = kwargs or {}
     return run(*args, **kwargs)

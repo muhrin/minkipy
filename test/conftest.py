@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import uuid
 
@@ -10,7 +11,7 @@ import minkipy
 
 @pytest.fixture
 def queue_name():
-    queue_name = "test-queue:{}".format(uuid.uuid4())
+    queue_name = 'test-queue:{}'.format(uuid.uuid4())
     yield queue_name
 
 
@@ -28,7 +29,7 @@ def test_project(queue_name, tmp_path):
     os.environ[minkipy.ENV_MINKIPY_SETTINGS] = str(tmp_path / 'settings.json')
 
     project = minkipy.project('minki-tests')
-    project.default_queue = "default-{}".format(queue_name)
+    project.default_queue = 'default-{}'.format(queue_name)
 
     project.kiwipy['connection_params'] = dict(uri='amqp://guest:guest@127.0.0.1',
                                                message_exchange='minki-tests',

@@ -16,7 +16,18 @@ repos:
     rev: pylint-2.5.2
     hooks:
     -   id: pylint
-        language: system
+        additional_dependencies: [
+              'beautifultable~=1.0.0',
+              'click',
+              'mincepy>=0.15.15, <0.16',
+              'kiwipy[rmq]~=0.6',
+              'PyYAML<=5.3.1',
+              'pyos',
+              'cmd2>=1.3.2',
+              # From dev
+              'pytest>4',
+              'twine',
+        ]
         args: [
             '--max-line-length=120',
             '--disable=duplicate-code',

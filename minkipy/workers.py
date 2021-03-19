@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import kiwipy
 
 from . import queues
@@ -19,7 +20,7 @@ def run(queue: queues.Queue, max_tasks: int = -1, timeout=60.) -> int:
             with queue.next_task(timeout=timeout) as fetched:
                 fetched.run()
             num_processed += 1
-            if max_tasks > 0 and num_processed >= max_tasks:
+            if 0 < max_tasks <= num_processed:
                 return num_processed
     except kiwipy.QueueEmpty:
         return num_processed
