@@ -132,15 +132,15 @@ class Queue:
         already_queued = []
         if skip_duplicate_check:
             for task in tasks:
-                task_ids.append(self.submit_one(task))
+                task_ids.append(self.submit_one(task))  # RMQ hit
         else:
-            current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}
+            current_ids = {msg.body[TASK_ID] for msg in self._kiwi_queue}  # RMQ hit
             for task in tasks:
                 task.save()
                 if task.obj_id in current_ids:
                     already_queued.append(task.obj_id)
                 else:
-                    task_ids.append(self.submit_one(task))
+                    task_ids.append(self.submit_one(task))  # RMQ hit
 
         if already_queued:
             logger.warning('Skipping the following tasks because they are already in the queue: %s',

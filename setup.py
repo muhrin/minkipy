@@ -29,7 +29,7 @@ setup(name='minkipy',
           'click',
           'mincepy>=0.15.15, <0.16',
           'kiwipy[rmq]~=0.6',
-          'PyYAML<=5.3.1',
+          'PyYAML>=5.1, <=5.3.1',
       ],
       extras_require={
           'dev': [
